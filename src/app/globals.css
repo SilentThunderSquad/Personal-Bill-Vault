@@ -1,13 +1,12 @@
 @import "tailwindcss";
 
 /* ============================================= */
-/* Warranty Vault — Premium Design System        */
+/* Warranty Vault — Design System                */
 /* ============================================= */
 @theme {
   --color-bg-main: #030712;
   --color-bg-surface: #0F172A;
   --color-bg-surface-hover: #1E293B;
-  --color-bg-elevated: #1A2332;
 
   --color-primary: #3B82F6;
   --color-primary-hover: #2563EB;
@@ -19,7 +18,6 @@
 
   --color-text-main: #F1F5F9;
   --color-text-muted: #94A3B8;
-  --color-text-accent: #D4A574;
 
   --color-success: #22C55E;
   --color-warning: #FACC15;
@@ -46,25 +44,24 @@ html {
 }
 
 body {
-  background-color: var(--color-bg-main);
-  color: var(--color-text-main);
+  background-color: #030712;
+  color: #F1F5F9;
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   min-height: 100vh;
 }
 
-/* Scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--color-bg-main);
+  background: #030712;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, var(--color-primary), var(--color-accent));
+  background: #1E293B;
   border-radius: 3px;
 }
 
@@ -74,9 +71,8 @@ body {
 .glass-card {
   background: rgba(15, 23, 42, 0.5);
   border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: var(--radius-xl);
+  border-radius: 1rem;
   backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
 }
 
 .glass-card-hover {
@@ -85,9 +81,7 @@ body {
 
 .glass-card-hover:hover {
   border-color: rgba(255, 255, 255, 0.12);
-  box-shadow:
-    0 20px 60px rgba(0, 0, 0, 0.4),
-    0 0 40px rgba(59, 130, 246, 0.06);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4), 0 0 40px rgba(59, 130, 246, 0.06);
   transform: translateY(-6px);
 }
 
@@ -111,129 +105,43 @@ body {
 /* ============================================= */
 /* Buttons                                       */
 /* ============================================= */
+.btn-primary {
+  background: linear-gradient(135deg, #3B82F6, #2563EB);
+  color: white;
+  box-shadow: 0 0 20px rgba(59, 130, 246, 0.35), 0 4px 15px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+  box-shadow: 0 0 35px rgba(59, 130, 246, 0.55), 0 8px 25px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  transform: translateY(-2px);
+}
+
 .btn-glow {
-  box-shadow:
-    0 0 20px rgba(59, 130, 246, 0.35),
-    0 0 60px rgba(59, 130, 246, 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  box-shadow: 0 0 20px rgba(59, 130, 246, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.15);
   transition: all 0.3s ease;
 }
 
 .btn-glow:hover {
-  box-shadow:
-    0 0 35px rgba(59, 130, 246, 0.55),
-    0 0 80px rgba(59, 130, 246, 0.2),
-    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  box-shadow: 0 0 35px rgba(59, 130, 246, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.2);
   transform: translateY(-2px);
-}
-
-/* ============================================= */
-/* Feature Card (colored top border variants)    */
-/* ============================================= */
-.feature-card {
-  position: relative;
-  background: rgba(15, 23, 42, 0.5);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 1.25rem;
-  padding: 2rem;
-  overflow: hidden;
-  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-}
-
-.feature-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 3px;
-  background: var(--card-gradient);
-  opacity: 0.7;
-  transition: opacity 0.3s ease;
-}
-
-.feature-card:hover {
-  border-color: rgba(255, 255, 255, 0.1);
-  transform: translateY(-6px);
-  box-shadow:
-    0 25px 60px rgba(0, 0, 0, 0.4),
-    0 0 30px var(--card-glow);
-}
-
-.feature-card:hover::before {
-  opacity: 1;
-}
-
-/* Icon glow inside feature cards */
-.feature-icon {
-  width: 3.5rem;
-  height: 3.5rem;
-  border-radius: 1rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 1.25rem;
-  transition: all 0.3s ease;
-  position: relative;
-}
-
-.feature-card:hover .feature-icon {
-  transform: scale(1.1);
-  box-shadow: 0 0 25px var(--card-glow);
-}
-
-/* ============================================= */
-/* Problem Cards                                 */
-/* ============================================= */
-.problem-card {
-  position: relative;
-  background: rgba(15, 23, 42, 0.4);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 1.25rem;
-  padding: 2rem;
-  overflow: hidden;
-  transition: all 0.4s ease;
-}
-
-.problem-card::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: var(--problem-gradient);
-  opacity: 0;
-  transition: opacity 0.4s ease;
-  pointer-events: none;
-}
-
-.problem-card:hover {
-  border-color: var(--problem-border);
-  transform: translateY(-4px);
-}
-
-.problem-card:hover::after {
-  opacity: 1;
-}
-
-.problem-card>* {
-  position: relative;
-  z-index: 1;
 }
 
 /* ============================================= */
 /* Status pills                                  */
 /* ============================================= */
 .status-active {
-  background: var(--color-success);
+  background: #22C55E;
   color: white;
 }
 
 .status-expiring {
-  background: var(--color-warning);
+  background: #FACC15;
   color: #1a1a1a;
 }
 
 .status-expired {
-  background: var(--color-danger);
+  background: #EF4444;
   color: white;
 }
 
@@ -251,7 +159,7 @@ body {
 }
 
 .shimmer {
-  background: linear-gradient(90deg, var(--color-bg-surface) 0%, var(--color-bg-surface-hover) 50%, var(--color-bg-surface) 100%);
+  background: linear-gradient(90deg, #0F172A 0%, #1E293B 50%, #0F172A 100%);
   background-size: 200% 100%;
   animation: shimmer 1.5s ease-in-out infinite;
 }
@@ -296,7 +204,7 @@ body {
   }
 
   50% {
-    transform: translateY(-12px);
+    transform: translateY(-14px);
   }
 }
 
@@ -316,113 +224,14 @@ body {
   animation: float 5.5s ease-in-out infinite 0.5s;
 }
 
-@keyframes glow-pulse {
-
-  0%,
-  100% {
-    opacity: 0.4;
-  }
-
-  50% {
-    opacity: 0.8;
-  }
-}
-
-.animate-glow-pulse {
-  animation: glow-pulse 3s ease-in-out infinite;
-}
-
-@keyframes gradient-shift {
-  0% {
-    background-position: 0% 50%;
-  }
-
-  50% {
-    background-position: 100% 50%;
-  }
-
-  100% {
-    background-position: 0% 50%;
-  }
-}
-
-.animate-gradient {
-  background-size: 200% 200%;
-  animation: gradient-shift 6s ease infinite;
-}
-
-/* ============================================= */
-/* Grid background                               */
-/* ============================================= */
-.grid-bg {
-  background-image:
-    linear-gradient(rgba(59, 130, 246, 0.04) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(59, 130, 246, 0.04) 1px, transparent 1px);
-  background-size: 60px 60px;
-}
-
-/* ============================================= */
-/* Hero mockup dashboard                         */
-/* ============================================= */
-.mockup-glow {
-  box-shadow:
-    0 0 80px rgba(59, 130, 246, 0.15),
-    0 0 160px rgba(59, 130, 246, 0.05),
-    0 40px 80px rgba(0, 0, 0, 0.5);
-}
-
-/* ============================================= */
-/* Step number                                   */
-/* ============================================= */
-.step-number {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 3.5rem;
-  height: 3.5rem;
-  border-radius: 50%;
-  background: linear-gradient(135deg, var(--color-primary), #A78BFA);
-  color: white;
-  font-weight: 800;
-  font-size: 1.125rem;
-  box-shadow: 0 0 30px rgba(59, 130, 246, 0.4);
-  position: relative;
-}
-
-.step-number::after {
-  content: '';
-  position: absolute;
-  inset: -4px;
-  border-radius: 50%;
-  border: 2px solid rgba(59, 130, 246, 0.2);
-}
-
-/* Step connector line */
-.step-connector {
-  position: absolute;
-  top: 1.75rem;
-  left: calc(50% + 2rem + 0.5rem);
-  right: calc(-50% + 2rem + 0.5rem);
-  height: 2px;
-  background: linear-gradient(90deg, rgba(59, 130, 246, 0.4), rgba(167, 139, 250, 0.2), rgba(212, 165, 116, 0.3));
-}
-
-/* ============================================= */
-/* Gold border glow                              */
-/* ============================================= */
-.gold-border-glow {
-  border: 1px solid var(--color-accent-dim);
-  box-shadow: 0 0 15px rgba(212, 165, 116, 0.08);
-}
-
 /* ============================================= */
 /* Input styles                                  */
 /* ============================================= */
 .input-dark {
-  background: var(--color-bg-main);
-  border: 1px solid var(--color-accent-dim);
-  color: var(--color-text-main);
-  border-radius: var(--radius-md);
+  background: #030712;
+  border: 1px solid rgba(212, 165, 116, 0.2);
+  color: #F1F5F9;
+  border-radius: 0.5rem;
   padding: 0.625rem 0.875rem;
   font-size: 0.875rem;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
@@ -431,31 +240,29 @@ body {
 }
 
 .input-dark::placeholder {
-  color: var(--color-text-muted);
+  color: #94A3B8;
 }
 
 .input-dark:focus {
-  border-color: var(--color-primary);
+  border-color: #3B82F6;
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+}
+
+/* Gold border glow */
+.gold-border-glow {
+  border: 1px solid rgba(212, 165, 116, 0.2);
+  box-shadow: 0 0 15px rgba(212, 165, 116, 0.08);
 }
 
 /* ============================================= */
 /* Clerk overrides                               */
 /* ============================================= */
 .cl-card {
-  background: var(--color-bg-surface) !important;
-  border: 1px solid var(--color-accent-dim) !important;
+  background: #0F172A !important;
+  border: 1px solid rgba(212, 165, 116, 0.2) !important;
 }
 
 .cl-headerTitle,
 .cl-headerSubtitle {
-  color: var(--color-text-main) !important;
-}
-
-/* ============================================= */
-/* Section divider gradient                      */
-/* ============================================= */
-.section-divider {
-  height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.3), rgba(212, 165, 116, 0.3), transparent);
+  color: #F1F5F9 !important;
 }
