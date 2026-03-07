@@ -12,11 +12,13 @@ import {
     Mail,
     Clock,
 } from 'lucide-react';
-import { supabase } from '@/lib/supabase/client';
+import { useSupabase } from '@/lib/hooks/useSupabase';
 import type { NotificationSettings } from '@/lib/types';
 
 export default function SettingsPage() {
     const { user } = useUser();
+    const { getClient } = useSupabase();
+
     const [settings, setSettings] = useState<NotificationSettings | null>(null);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
@@ -30,7 +32,8 @@ export default function SettingsPage() {
         const fetchSettings = async () => {
             if (!user) return;
             try {
-                const { data, error } = await supabase
+                const supabaseClient = await getClient();
+                const { data, error } = await supabaseClient
                     .from('notification_settings')
                     .select('*')
                     .eq('user_id', user.id)
@@ -50,7 +53,7 @@ export default function SettingsPage() {
             }
         };
         fetchSettings();
-    }, [user]);
+    }, [user, getClient]);
 
     const handleSave = async () => {
         if (!user) return;
@@ -59,9 +62,10 @@ export default function SettingsPage() {
         setSaved(false);
 
         try {
+            const supabaseClient = await getClient();
             if (settings) {
                 // Update existing
-                const { error: updateError } = await supabase
+                const { error: updateError } = await supabaseClient
                     .from('notification_settings')
                     .update({
                         days_before_expiry: daysBeforeExpiry,
@@ -72,7 +76,7 @@ export default function SettingsPage() {
                 if (updateError) throw updateError;
             } else {
                 // Create new
-                const { error: insertError } = await supabase
+                const { error: insertError } = await supabaseClient
                     .from('notification_settings')
                     .insert({
                         user_id: user.id,

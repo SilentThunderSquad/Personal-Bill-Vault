@@ -18,7 +18,7 @@ import {
     Pencil,
     Trash2,
 } from 'lucide-react';
-import { supabase } from '@/lib/supabase/client';
+import { useSupabase } from '@/lib/hooks/useSupabase';
 import { cn, getWarrantyStatus, getDaysRemaining, formatCurrency, formatDate } from '@/lib/utils';
 import type { Bill } from '@/lib/types';
 
@@ -28,6 +28,7 @@ type StatusFilter = 'all' | 'active' | 'expiring' | 'expired';
 
 export default function DashboardPage() {
     const { user } = useUser();
+    const { getClient } = useSupabase();
     const [bills, setBills] = useState<Bill[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
@@ -41,7 +42,8 @@ export default function DashboardPage() {
         if (!user) return;
         setLoading(true);
         try {
-            const { data, error } = await supabase
+            const supabaseClient = await getClient();
+            const { data, error } = await supabaseClient
                 .from('bills')
                 .select('*')
                 .eq('user_id', user.id)
@@ -55,7 +57,7 @@ export default function DashboardPage() {
         } finally {
             setLoading(false);
         }
-    }, [user, sortField, sortOrder]);
+    }, [user, sortField, sortOrder, getClient]);
 
     useEffect(() => {
         fetchBills();
@@ -63,7 +65,8 @@ export default function DashboardPage() {
 
     const handleDelete = async (billId: string) => {
         try {
-            const { error } = await supabase
+            const supabaseClient = await getClient();
+            const { error } = await supabaseClient
                 .from('bills')
                 .update({ deleted_at: new Date().toISOString() })
                 .eq('id', billId)

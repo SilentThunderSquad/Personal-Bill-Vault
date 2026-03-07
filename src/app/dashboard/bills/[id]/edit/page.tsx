@@ -13,14 +13,16 @@ import {
     FileText,
     Camera,
 } from 'lucide-react';
-import { supabase } from '@/lib/supabase/client';
+import { useSupabase } from '@/lib/hooks/useSupabase';
 import { PRODUCT_CATEGORIES } from '@/lib/utils';
 import type { Bill, BillFormData } from '@/lib/types';
+import NextImage from 'next/image';
 
 export default function EditBillPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = use(params);
     const router = useRouter();
     const { user } = useUser();
+    const { getClient } = useSupabase();
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const [bill, setBill] = useState<Bill | null>(null);
@@ -35,7 +37,8 @@ export default function EditBillPage({ params }: { params: Promise<{ id: string 
         const fetchBill = async () => {
             if (!user) return;
             try {
-                const { data, error } = await supabase
+                const supabaseClient = await getClient();
+                const { data, error } = await supabaseClient
                     .from('bills')
                     .select('*')
                     .eq('id', id)
@@ -69,7 +72,7 @@ export default function EditBillPage({ params }: { params: Promise<{ id: string 
             }
         };
         fetchBill();
-    }, [id, user]);
+    }, [id, user, getClient]);
 
     const calcEndDate = (purchaseDate: string, months: string) => {
         if (!purchaseDate || !months) return '';
@@ -112,18 +115,19 @@ export default function EditBillPage({ params }: { params: Promise<{ id: string 
         setError(null);
 
         try {
+            const supabaseClient = await getClient();
             let billImageUrl = bill.bill_image_url;
 
             // Upload new image if changed
             if (imageFile) {
                 const fileExt = imageFile.name.split('.').pop();
                 const fileName = `${user.id}/${Date.now()}.${fileExt}`;
-                const { error: uploadError } = await supabase.storage
+                const { error: uploadError } = await supabaseClient.storage
                     .from('bill-images')
                     .upload(fileName, imageFile, { upsert: true });
                 if (uploadError) throw uploadError;
 
-                const { data: urlData } = supabase.storage
+                const { data: urlData } = supabaseClient.storage
                     .from('bill-images')
                     .getPublicUrl(fileName);
                 billImageUrl = urlData.publicUrl;
@@ -133,7 +137,7 @@ export default function EditBillPage({ params }: { params: Promise<{ id: string 
                 formData.warranty_end_date ||
                 calcEndDate(formData.purchase_date, formData.warranty_period_months);
 
-            const { error: updateError } = await supabase
+            const { error: updateError } = await supabaseClient
                 .from('bills')
                 .update({
                     title: formData.title,
@@ -239,11 +243,14 @@ export default function EditBillPage({ params }: { params: Promise<{ id: string 
                                     </button>
                                 </div>
                             </div>
-                            <img
-                                src={imagePreview}
-                                alt="Bill preview"
-                                className="rounded-lg max-h-48 object-contain mx-auto"
-                            />
+                            <div className="relative w-full aspect-[4/3] max-h-48 mt-4">
+                                <NextImage
+                                    src={imagePreview}
+                                    alt="Bill preview"
+                                    fill
+                                    className="object-contain"
+                                />
+                            </div>
                         </>
                     ) : (
                         <button

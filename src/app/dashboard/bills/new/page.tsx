@@ -13,10 +13,11 @@ import {
     X,
     Sparkles,
 } from 'lucide-react';
-import { supabase } from '@/lib/supabase/client';
+import { useSupabase } from '@/lib/hooks/useSupabase';
 import { extractWithTesseract } from '@/lib/ocr/tesseract';
 import { PRODUCT_CATEGORIES } from '@/lib/utils';
 import type { BillFormData, OcrResult } from '@/lib/types';
+import NextImage from 'next/image';
 
 const initialFormData: BillFormData = {
     title: '',
@@ -36,6 +37,7 @@ const initialFormData: BillFormData = {
 export default function NewBillPage() {
     const router = useRouter();
     const { user } = useUser();
+    const { getClient } = useSupabase();
     const fileInputRef = useRef<HTMLInputElement>(null);
     const cameraInputRef = useRef<HTMLInputElement>(null);
 
@@ -123,18 +125,19 @@ export default function NewBillPage() {
         setError(null);
 
         try {
+            const supabaseClient = await getClient();
             let billImageUrl: string | null = null;
 
             // Upload image to Supabase Storage
             if (imageFile) {
                 const fileExt = imageFile.name.split('.').pop();
                 const fileName = `${user.id}/${Date.now()}.${fileExt}`;
-                const { error: uploadError } = await supabase.storage
+                const { error: uploadError } = await supabaseClient.storage
                     .from('bill-images')
                     .upload(fileName, imageFile, { upsert: true });
                 if (uploadError) throw uploadError;
 
-                const { data: urlData } = supabase.storage
+                const { data: urlData } = supabaseClient.storage
                     .from('bill-images')
                     .getPublicUrl(fileName);
                 billImageUrl = urlData.publicUrl;
@@ -146,7 +149,7 @@ export default function NewBillPage() {
                 calcEndDate(formData.purchase_date, formData.warranty_period_months);
 
             // Insert bill
-            const { error: insertError } = await supabase.from('bills').insert({
+            const { error: insertError } = await supabaseClient.from('bills').insert({
                 user_id: user.id,
                 title: formData.title,
                 product_category: formData.product_category,
@@ -295,11 +298,14 @@ export default function NewBillPage() {
                                     <X className="w-4 h-4" />
                                 </button>
                             </div>
-                            <img
-                                src={imagePreview}
-                                alt="Bill preview"
-                                className="rounded-lg max-h-48 object-contain mx-auto"
-                            />
+                            <div className="relative w-full aspect-[4/3] max-h-48 mt-4">
+                                <NextImage
+                                    src={imagePreview}
+                                    alt="Bill preview"
+                                    fill
+                                    className="object-contain"
+                                />
+                            </div>
                         </div>
                     )}
 

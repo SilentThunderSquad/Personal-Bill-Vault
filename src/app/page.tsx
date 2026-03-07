@@ -1,6 +1,6 @@
 'use client';
 
-import Link from 'next/link';
+import Link from 'next/link';HeroUI for the "Premium Look" and TanStack Query for the "Smooth Feel."
 import { SignedIn, SignedOut } from '@clerk/nextjs';
 import { motion } from 'framer-motion';
 import type { Easing } from 'framer-motion';
@@ -273,122 +273,113 @@ export default function LandingPage() {
       </nav>
 
       {/* ═══ HERO ═══ */}
-      <section className="relative px-4 sm:px-6 lg:px-8" style={{ paddingTop: '10rem', paddingBottom: '4rem' }}>
-        {/* BG orbs — using inline styles so they ACTUALLY render */}
+      <section className="relative px-4 sm:px-6 lg:px-8 pt-32 pb-20 sm:pt-40 sm:pb-32 overflow-hidden">
+        {/* BG orbs */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <div className="absolute rounded-full"
-            style={{ top: '-100px', left: '50%', transform: 'translateX(-50%)', width: '900px', height: '500px', background: 'rgba(59,130,246,0.12)', filter: 'blur(150px)' }}
+            style={{ top: '-10%', left: '50%', transform: 'translateX(-50%)', width: '90vw', height: '50vh', background: 'rgba(59,130,246,0.12)', filter: 'blur(120px)' }}
           />
           <div className="absolute rounded-full"
-            style={{ top: '200px', left: '-100px', width: '400px', height: '400px', background: 'rgba(139,92,246,0.08)', filter: 'blur(120px)' }}
+            style={{ top: '20%', left: '-10%', width: '40vw', height: '40vw', background: 'rgba(139,92,246,0.08)', filter: 'blur(100px)' }}
           />
           <div className="absolute rounded-full"
-            style={{ top: '300px', right: '-50px', width: '350px', height: '350px', background: 'rgba(212,165,116,0.06)', filter: 'blur(100px)' }}
+            style={{ top: '30%', right: '-5%', width: '35vw', height: '35vw', background: 'rgba(212,165,116,0.06)', filter: 'blur(100px)' }}
           />
           {/* Grid */}
-          <div className="absolute inset-0" style={{
-            backgroundImage: 'linear-gradient(rgba(59,130,246,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(59,130,246,0.04) 1px, transparent 1px)',
-            backgroundSize: '60px 60px',
-            opacity: 0.4,
+          <div className="absolute inset-0 opacity-20" style={{
+            backgroundImage: 'linear-gradient(rgba(59,130,246,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(59,130,246,0.1) 1px, transparent 1px)',
+            backgroundSize: '40px 40px',
           }} />
         </div>
 
         {/* Floating icons */}
-        <FloatingIcon icon={Receipt} color="#3B82F6" className="top-44 left-[6%] animate-float" />
-        <FloatingIcon icon={Bell} color="#F59E0B" className="top-52 right-[8%] animate-float-d1" />
-        <FloatingIcon icon={ShieldCheck} color="#22C55E" className="top-[340px] left-[4%] animate-float-d2" />
-        <FloatingIcon icon={Camera} color="#A855F7" className="top-[380px] right-[5%] animate-float-d3" />
+        <FloatingIcon icon={Receipt} color="#3B82F6" className="top-1/4 left-[8%] animate-float" />
+        <FloatingIcon icon={Bell} color="#F59E0B" className="top-1/3 right-[10%] animate-float-d1" />
+        <FloatingIcon icon={ShieldCheck} color="#22C55E" className="bottom-1/4 left-[5%] animate-float-d2" />
+        <FloatingIcon icon={Camera} color="#A855F7" className="bottom-1/3 right-[12%] animate-float-d3" />
 
-        <div className="max-w-5xl mx-auto text-center relative">
-          <motion.div initial="hidden" animate="visible" variants={stagger} className="space-y-7">
-
+        <div className="max-w-6xl mx-auto flex flex-col items-center relative z-10">
+          <motion.div 
+            initial="hidden" 
+            animate="visible" 
+            variants={stagger} 
+            className="flex flex-col items-center text-center gap-8 mb-16 sm:mb-24"
+          >
             {/* Badge */}
             <motion.div variants={fadeUp} custom={0}>
-              <span className="inline-flex items-center gap-2.5 px-5 py-2 rounded-full"
-                style={{ border: '1px solid rgba(212,165,116,0.25)', background: 'rgba(212,165,116,0.08)' }}
-              >
+              <div className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full border border-accent/20 bg-accent/5 backdrop-blur-sm">
                 <span className="relative flex h-2 w-2">
-                  <span className="absolute inline-flex h-full w-full rounded-full opacity-75"
-                    style={{ background: '#D4A574', animation: 'pulse-dot 2s ease-in-out infinite' }}
-                  />
-                  <span className="relative inline-flex rounded-full h-2 w-2" style={{ background: '#D4A574' }} />
+                  <span className="absolute inline-flex h-full w-full rounded-full bg-accent opacity-75 animate-ping" />
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-accent" />
                 </span>
-                <span className="text-sm font-medium tracking-wide" style={{ color: '#D4A574' }}>
+                <span className="text-xs sm:text-sm font-medium tracking-wide text-accent">
                   Your Digital Warranty Organizer
                 </span>
-              </span>
+              </div>
             </motion.div>
 
             {/* Headline */}
-            <motion.h1 variants={fadeUp} custom={1}
-              className="text-4xl sm:text-5xl lg:text-7xl font-extrabold leading-tight tracking-tight"
-            >
-              Never Lose a{' '}
-              <span className="gradient-text">Bill</span>
-              {' '}or{' '}
-              <span className="gradient-text">Warranty</span>
-              <br />
-              <span className="block mt-2 text-2xl sm:text-3xl lg:text-4xl font-bold" style={{ color: 'rgba(148,163,184,0.6)' }}>
-                Ever Again
-              </span>
-            </motion.h1>
+            <motion.div variants={fadeUp} custom={1} className="max-w-4xl">
+              <h1 className="text-4xl sm:text-6xl lg:text-8xl font-black leading-[1.1] tracking-tight text-white">
+                Never Lose a <span className="gradient-text">Bill</span> or <span className="gradient-text">Warranty</span> <span className="block text-text-muted/60 text-2xl sm:text-4xl mt-4">Ever Again</span>
+              </h1>
+            </motion.div>
 
-            {/* Sub */}
+            {/* Sub text */}
             <motion.p variants={fadeUp} custom={2}
-              className="max-w-2xl mx-auto text-base sm:text-lg leading-relaxed"
-              style={{ color: '#94A3B8' }}
+              className="max-w-2xl text-lg sm:text-xl text-text-muted leading-relaxed"
             >
               Store all your purchase bills &amp; warranty cards in one secure vault.
               We&apos;ll remind you before they expire — so you never miss a claim.
             </motion.p>
 
-            {/* CTA */}
-            <motion.div variants={fadeUp} custom={3} className="flex flex-col sm:flex-row gap-4 justify-center pt-2">
+            {/* CTA Buttons */}
+            <motion.div variants={fadeUp} custom={3} className="flex flex-col sm:flex-row gap-4 items-center pt-2">
               <SignedOut>
                 <Link href="/sign-up"
-                  className="group inline-flex items-center justify-center gap-2.5 text-white px-9 py-4 rounded-2xl text-lg font-bold transition-all btn-primary"
+                  className="group inline-flex items-center justify-center gap-2.5 bg-primary hover:bg-primary-hover text-white px-8 py-4 rounded-2xl text-lg font-bold transition-all btn-glow"
                 >
                   Create Your Free Vault
-                  <ChevronRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
+                  <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                 </Link>
                 <Link href="/sign-in"
-                  className="inline-flex items-center justify-center gap-2 text-white px-9 py-4 rounded-2xl text-lg font-medium transition-all"
-                  style={{ border: '1px solid rgba(255,255,255,0.12)' }}
-                  onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'rgba(212,165,116,0.4)'; e.currentTarget.style.background = 'rgba(212,165,116,0.04)'; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.12)'; e.currentTarget.style.background = 'transparent'; }}
+                  className="inline-flex items-center justify-center gap-2 text-white px-8 py-4 rounded-2xl text-lg font-medium border border-white/10 hover:border-accent/40 hover:bg-accent/5 transition-all"
                 >
                   I Already Have an Account
                 </Link>
               </SignedOut>
               <SignedIn>
                 <Link href="/dashboard"
-                  className="group inline-flex items-center justify-center gap-2.5 text-white px-9 py-4 rounded-2xl text-lg font-bold transition-all btn-primary"
+                  className="group inline-flex items-center justify-center gap-2.5 bg-primary hover:bg-primary-hover text-white px-8 py-4 rounded-2xl text-lg font-bold transition-all btn-glow"
                 >
-                  Go to Dashboard <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
+                  Go to Dashboard <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                 </Link>
               </SignedIn>
             </motion.div>
 
-            {/* Trust */}
-            <motion.div variants={fadeUp} custom={4} className="flex flex-wrap items-center justify-center gap-6 text-sm"
-              style={{ color: 'rgba(148,163,184,0.6)' }}
-            >
+            {/* Trust Badges */}
+            <motion.div variants={fadeUp} custom={4} className="flex flex-wrap items-center justify-center gap-x-8 gap-y-3 text-sm text-text-muted/60">
               {['Free forever', 'No credit card', 'Secure & private'].map((t) => (
                 <span key={t} className="flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4" style={{ color: 'rgba(34,197,94,0.7)' }} /> {t}
+                  <CheckCircle2 className="w-4 h-4 text-success/70" /> {t}
                 </span>
               ))}
             </motion.div>
           </motion.div>
 
           {/* Dashboard Mockup */}
-          <motion.div initial={{ opacity: 0, y: 60 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6, duration: 0.8, ease }}>
+          <motion.div 
+            initial={{ opacity: 0, y: 60 }} 
+            animate={{ opacity: 1, y: 0 }} 
+            transition={{ delay: 0.6, duration: 0.8, ease }}
+            className="w-full max-w-5xl"
+          >
             <DashboardMockup />
           </motion.div>
         </div>
 
-        {/* Bottom gradient */}
-        <div className="absolute bottom-0 left-0 right-0 h-32"
+        {/* Bottom gradient overlay */}
+        <div className="absolute bottom-0 left-0 right-0 h-32 pointer-events-none"
           style={{ background: 'linear-gradient(to top, #030712, transparent)' }}
         />
       </section>
@@ -396,39 +387,59 @@ export default function LandingPage() {
       <Divider />
 
       {/* ═══ PROBLEM ═══ */}
-      <section className="px-4 sm:px-6 lg:px-8" style={{ paddingTop: '6rem', paddingBottom: '6rem' }}>
+      <section className="px-4 sm:px-6 lg:px-8 py-24 sm:py-32">
         <div className="max-w-6xl mx-auto">
-          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.3 }} variants={stagger} className="text-center mb-16">
-            <motion.p variants={fadeUp} custom={0} className="text-sm font-semibold uppercase mb-4"
-              style={{ color: '#EF4444', letterSpacing: '0.2em' }}
-            >
-              The Problem
+          <motion.div 
+            initial="hidden" 
+            whileInView="visible" 
+            viewport={{ once: true, amount: 0.3 }} 
+            variants={stagger} 
+            className="text-center mb-16 sm:mb-20"
+          >
+            <motion.p variants={fadeUp} custom={0} className="text-sm font-bold uppercase tracking-[0.2em] text-danger mb-4">
+              The Pain
             </motion.p>
-            <motion.h2 variants={fadeUp} custom={1} className="text-3xl sm:text-5xl font-bold mb-5 text-white">
+            <motion.h2 variants={fadeUp} custom={1} className="text-3xl sm:text-5xl font-black mb-6 text-white leading-tight">
               Sound <span className="gradient-text-gold">Familiar</span>?
             </motion.h2>
-            <motion.p variants={fadeUp} custom={2} className="text-lg max-w-xl mx-auto" style={{ color: '#94A3B8' }}>
-              The warranty expires just when the product breaks.
+            <motion.p variants={fadeUp} custom={2} className="text-lg text-text-muted max-w-2xl mx-auto">
+              Warranties always seem to expire exactly one week before the product breaks. 
+              Don't let disorganized paperwork cost you thousands.
             </motion.p>
           </motion.div>
 
-          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.2 }} variants={stagger} className="grid md:grid-cols-3 gap-6">
+          <motion.div 
+            initial="hidden" 
+            whileInView="visible" 
+            viewport={{ once: true, amount: 0.2 }} 
+            variants={stagger} 
+            className="grid md:grid-cols-3 gap-6 sm:gap-8"
+          >
             <motion.div variants={scaleIn} custom={0}>
-              <ProblemCard icon={FolderOpen} title="Bills everywhere"
-                desc="Paper in drawers, PDFs in emails, photos on WhatsApp. Finding the right one is a nightmare."
-                color="#EF4444" hoverBg="rgba(239,68,68,0.06)"
+              <ProblemCard 
+                icon={FolderOpen} 
+                title="Bills everywhere"
+                desc="Paper in drawers, PDFs in emails, photos on WhatsApp. Finding the right one when you need it is a nightmare."
+                color="#EF4444" 
+                hoverBg="rgba(239,68,68,0.06)"
               />
             </motion.div>
             <motion.div variants={scaleIn} custom={1}>
-              <ProblemCard icon={Clock} title="Missed warranty claims"
-                desc="Your appliance broke but the warranty expired last week. You had no idea it was about to end."
-                color="#F59E0B" hoverBg="rgba(245,158,11,0.06)"
+              <ProblemCard 
+                icon={Clock} 
+                title="Missed deadlines"
+                desc="Your appliance broke but the warranty expired last week. You had no reminder and now you're stuck with the bill."
+                color="#F59E0B" 
+                hoverBg="rgba(245,158,11,0.06)"
               />
             </motion.div>
             <motion.div variants={scaleIn} custom={2}>
-              <ProblemCard icon={Receipt} title="Hours of searching"
-                desc="The service center asks for the bill. You spend hours digging through files and folders."
-                color="#A855F7" hoverBg="rgba(168,85,247,0.06)"
+              <ProblemCard 
+                icon={Receipt} 
+                title="Hours of searching"
+                desc="The service center is waiting and you're digging through old cloud folders. It's time to digitize your peace of mind."
+                color="#A855F7" 
+                hoverBg="rgba(168,85,247,0.06)"
               />
             </motion.div>
           </motion.div>

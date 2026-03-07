@@ -20,14 +20,16 @@ import {
     ShieldAlert,
     ShieldX,
 } from 'lucide-react';
-import { supabase } from '@/lib/supabase/client';
+import { useSupabase } from '@/lib/hooks/useSupabase';
 import { cn, getWarrantyStatus, getDaysRemaining, formatCurrency, formatDate } from '@/lib/utils';
 import type { Bill } from '@/lib/types';
+import NextImage from 'next/image';
 
 export default function BillDetailsPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = use(params);
     const router = useRouter();
     const { user } = useUser();
+    const { getClient } = useSupabase();
     const [bill, setBill] = useState<Bill | null>(null);
     const [loading, setLoading] = useState(true);
     const [deleting, setDeleting] = useState(false);
@@ -37,7 +39,8 @@ export default function BillDetailsPage({ params }: { params: Promise<{ id: stri
         const fetchBill = async () => {
             if (!user) return;
             try {
-                const { data, error } = await supabase
+                const supabaseClient = await getClient();
+                const { data, error } = await supabaseClient
                     .from('bills')
                     .select('*')
                     .eq('id', id)
@@ -53,13 +56,14 @@ export default function BillDetailsPage({ params }: { params: Promise<{ id: stri
             }
         };
         fetchBill();
-    }, [id, user]);
+    }, [id, user, getClient]);
 
     const handleDelete = async () => {
         if (!user || !bill) return;
         setDeleting(true);
         try {
-            const { error } = await supabase
+            const supabaseClient = await getClient();
+            const { error } = await supabaseClient
                 .from('bills')
                 .update({ deleted_at: new Date().toISOString() })
                 .eq('id', bill.id)
@@ -257,11 +261,15 @@ export default function BillDetailsPage({ params }: { params: Promise<{ id: stri
                             </a>
                         </div>
                     </div>
-                    <img
-                        src={bill.bill_image_url}
-                        alt={`Bill for ${bill.title}`}
-                        className="rounded-lg max-h-96 object-contain mx-auto border border-accent-dim"
-                    />
+                    <div className="relative w-full aspect-[4/3] max-h-[500px] overflow-hidden rounded-lg border border-accent-dim">
+                        <NextImage
+                            src={bill.bill_image_url}
+                            alt={`Bill for ${bill.title}`}
+                            fill
+                            className="object-contain"
+                            priority
+                        />
+                    </div>
                 </div>
             )}
         </div>
