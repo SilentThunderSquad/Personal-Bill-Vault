@@ -28,16 +28,18 @@ export function useBills() {
     setLoading(false);
   }, [user]);
 
-  const fetchBill = async (id: string) => {
+  const fetchBill = useCallback(async (id: string) => {
+    if (!user) throw new Error('Not authenticated');
     const { data, error: fetchError } = await supabase
       .from('bills')
       .select('*')
       .eq('id', id)
+      .eq('user_id', user.id)
       .single();
 
     if (fetchError) throw fetchError;
     return data as Bill;
-  };
+  }, [user]);
 
   const createBill = async (formData: BillFormData, imageFile?: File) => {
     if (!user) throw new Error('Not authenticated');
@@ -107,10 +109,12 @@ export function useBills() {
   };
 
   const deleteBill = async (billId: string) => {
+    if (!user) throw new Error('Not authenticated');
     const { error: deleteError } = await supabase
       .from('bills')
       .update({ deleted_at: new Date().toISOString() })
-      .eq('id', billId);
+      .eq('id', billId)
+      .eq('user_id', user.id);
 
     if (deleteError) throw deleteError;
     setBills((prev) => prev.filter((b) => b.id !== billId));

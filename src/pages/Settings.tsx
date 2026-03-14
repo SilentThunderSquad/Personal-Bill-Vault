@@ -9,21 +9,54 @@ import { toast } from 'sonner';
 import { Bell, User, Shield } from 'lucide-react';
 import type { NotificationSettings } from '@/types';
 
+const DEFAULT_SETTINGS: Omit<NotificationSettings, 'id' | 'user_id' | 'created_at' | 'updated_at'> = {
+  email_enabled: true,
+  notify_30_days: true,
+  notify_7_days: true,
+  notify_1_day: true,
+};
+
 export default function Settings() {
   const { user, signOut } = useAuth();
   const [settings, setSettings] = useState<NotificationSettings | null>(null);
   const [saving, setSaving] = useState(false);
+  const [loadingSettings, setLoadingSettings] = useState(true);
+  const [settingsError, setSettingsError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!user) return;
-    supabase
-      .from('notification_settings')
-      .select('*')
-      .eq('user_id', user.id)
-      .single()
-      .then(({ data }) => {
-        if (data) setSettings(data);
-      });
+    const loadSettings = async () => {
+      if (!user) return;
+      setLoadingSettings(true);
+      setSettingsError(null);
+
+      const { data, error } = await supabase
+        .from('notification_settings')
+        .select('*')
+        .eq('user_id', user.id)
+        .single();
+
+      if (error && error.code === 'PGRST116') {
+        // No settings found, create default settings
+        const { data: newData, error: insertError } = await supabase
+          .from('notification_settings')
+          .insert({ user_id: user.id, ...DEFAULT_SETTINGS })
+          .select()
+          .single();
+
+        if (insertError) {
+          setSettingsError('Failed to create notification settings');
+        } else {
+          setSettings(newData);
+        }
+      } else if (error) {
+        setSettingsError('Failed to load notification settings');
+      } else if (data) {
+        setSettings(data);
+      }
+      setLoadingSettings(false);
+    };
+
+    loadSettings();
   }, [user]);
 
   const updateSetting = async (key: keyof NotificationSettings, value: boolean) => {
@@ -79,7 +112,11 @@ export default function Settings() {
           <CardDescription>Configure when you receive warranty expiry alerts</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          {settings ? (
+          {loadingSettings ? (
+            <p className="text-sm text-muted-foreground">Loading notification settings...</p>
+          ) : settingsError ? (
+            <p className="text-sm text-destructive">{settingsError}</p>
+          ) : settings ? (
             <>
               <ToggleRow
                 label="Email Notifications"
@@ -112,7 +149,7 @@ export default function Settings() {
               />
             </>
           ) : (
-            <p className="text-sm text-muted-foreground">Loading notification settings...</p>
+            <p className="text-sm text-muted-foreground">No settings available</p>
           )}
         </CardContent>
       </Card>

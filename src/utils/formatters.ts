@@ -1,21 +1,34 @@
-import { format, formatDistanceToNow, differenceInDays, parseISO } from 'date-fns';
+import { format, formatDistanceToNow, differenceInDays, parseISO, isValid, addMonths } from 'date-fns';
 import type { WarrantyStatus } from '@/types';
 import { EXPIRING_SOON_DAYS } from './constants';
 
+function safeParse(dateString: string): Date | null {
+  try {
+    const parsed = parseISO(dateString);
+    return isValid(parsed) ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+
 export function formatDate(date: string): string {
-  return format(parseISO(date), 'MMM dd, yyyy');
+  const parsed = safeParse(date);
+  return parsed ? format(parsed, 'MMM dd, yyyy') : 'Invalid date';
 }
 
 export function formatDateShort(date: string): string {
-  return format(parseISO(date), 'dd/MM/yyyy');
+  const parsed = safeParse(date);
+  return parsed ? format(parsed, 'dd/MM/yyyy') : 'Invalid date';
 }
 
 export function formatRelativeDate(date: string): string {
-  return formatDistanceToNow(parseISO(date), { addSuffix: true });
+  const parsed = safeParse(date);
+  return parsed ? formatDistanceToNow(parsed, { addSuffix: true }) : 'Invalid date';
 }
 
 export function getDaysRemaining(expiryDate: string): number {
-  return differenceInDays(parseISO(expiryDate), new Date());
+  const parsed = safeParse(expiryDate);
+  return parsed ? differenceInDays(parsed, new Date()) : 0;
 }
 
 export function getWarrantyStatus(expiryDate: string): WarrantyStatus {
@@ -35,7 +48,8 @@ export function formatCurrency(amount: number, currency: string = 'INR'): string
 }
 
 export function calculateExpiryDate(purchaseDate: string, months: number): string {
-  const date = parseISO(purchaseDate);
-  date.setMonth(date.getMonth() + months);
-  return format(date, 'yyyy-MM-dd');
+  const parsed = safeParse(purchaseDate);
+  if (!parsed) return '';
+  const expiry = addMonths(parsed, months);
+  return format(expiry, 'yyyy-MM-dd');
 }
