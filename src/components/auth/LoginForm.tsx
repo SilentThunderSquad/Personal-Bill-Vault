@@ -5,27 +5,39 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
-import { Shield } from 'lucide-react';
+import { Shield, AlertTriangle } from 'lucide-react';
 
 export function LoginForm() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const { signIn } = useAuth();
+  const { signIn, isConfigured } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const from = (location.state as { from?: { pathname: string } })?.from?.pathname || '/dashboard';
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!isConfigured) {
+      toast.error('App is not configured. Environment variables are missing.');
+      return;
+    }
+
     setLoading(true);
-    const { error } = await signIn(email, password);
-    setLoading(false);
-    if (error) {
-      toast.error(error.message);
-    } else {
-      toast.success('Welcome back!');
-      navigate(from, { replace: true });
+    try {
+      const { error } = await signIn(email, password);
+      if (error) {
+        toast.error(error.message);
+      } else {
+        toast.success('Welcome back!');
+        navigate(from, { replace: true });
+      }
+    } catch (err) {
+      console.error('Login error:', err);
+      toast.error('Something went wrong. Please try again later.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -41,6 +53,16 @@ export function LoginForm() {
           <p className="text-muted-foreground mt-2">Sign in to your account</p>
         </div>
 
+        {!isConfigured && (
+          <div className="flex items-start gap-3 p-4 bg-destructive/10 border border-destructive/30 rounded-lg">
+            <AlertTriangle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
+            <div className="text-sm text-destructive">
+              <p className="font-semibold">Backend not configured</p>
+              <p className="mt-1">Supabase environment variables are missing. Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in Vercel Settings &gt; Environment Variables, then redeploy.</p>
+            </div>
+          </div>
+        )}
+
         <form onSubmit={handleSubmit} className="space-y-4 bg-card p-8 rounded-xl border border-border">
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
@@ -53,7 +75,7 @@ export function LoginForm() {
             </div>
             <Input id="password" type="password" placeholder="Enter your password" value={password} onChange={(e) => setPassword(e.target.value)} required />
           </div>
-          <Button type="submit" className="w-full bg-accent hover:bg-accent/90" disabled={loading}>
+          <Button type="submit" className="w-full bg-accent hover:bg-accent/90" disabled={loading || !isConfigured}>
             {loading ? 'Signing in...' : 'Sign In'}
           </Button>
         </form>

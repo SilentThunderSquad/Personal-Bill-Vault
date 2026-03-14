@@ -16,13 +16,18 @@ export function ForgotPasswordForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    const { error } = await resetPassword(email);
-    setLoading(false);
-    if (error) {
-      toast.error(error.message);
-    } else {
-      setSent(true);
-      toast.success('Password reset email sent!');
+    try {
+      const { error } = await resetPassword(email);
+      if (error) {
+        toast.error(error.message);
+      } else {
+        setSent(true);
+        toast.success('Password reset email sent!');
+      }
+    } catch {
+      toast.error('Something went wrong. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
 
