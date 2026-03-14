@@ -10,4 +10,18 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
     },
   },
+  build: {
+    chunkSizeWarningLimit: 600,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'tesseract': ['tesseract.js'],
+          'vendor': ['react', 'react-dom', 'react-router-dom'],
+          'ui': ['framer-motion', 'lucide-react'],
+          'supabase': ['@supabase/supabase-js'],
+          'base-ui': ['@base-ui/react'],
+        },
+      },
+    },
+  },
 })
