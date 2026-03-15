@@ -185,7 +185,15 @@ export default function Settings() {
         .upload(filePath, file, { upsert: true });
 
       if (uploadError) {
-        toast.error('Failed to upload image');
+        console.error('Upload error:', uploadError);
+        // Provide specific error message based on error type
+        if (uploadError.message.includes('Bucket not found')) {
+          toast.error('Storage not configured. Please create the "avatars" bucket in Supabase.');
+        } else if (uploadError.message.includes('policy') || uploadError.message.includes('permission') || uploadError.message.includes('not authorized')) {
+          toast.error('Storage policy not configured. Run the storage policies SQL in Supabase.');
+        } else {
+          toast.error(`Upload failed: ${uploadError.message}`);
+        }
         return;
       }
 
