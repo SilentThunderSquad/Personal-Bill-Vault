@@ -1,13 +1,21 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/services/supabase';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
-import { Bell, User, Shield } from 'lucide-react';
-import type { NotificationSettings } from '@/types';
+import { Bell, User, Shield, Camera, Lock, Save, Loader2 } from 'lucide-react';
+import { motion } from 'framer-motion';
+import type { NotificationSettings, UserProfile } from '@/types';
+import { sanitizePhoneNumber } from '@/utils/security';
+
+const COUNTRIES = [
+  'India', 'United States', 'United Kingdom', 'Canada', 'Australia',
+  'Germany', 'France', 'Japan', 'Singapore', 'UAE', 'Other',
+];
 
 const DEFAULT_SETTINGS: Omit<NotificationSettings, 'id' | 'user_id' | 'created_at' | 'updated_at'> = {
   email_enabled: true,
@@ -17,12 +25,79 @@ const DEFAULT_SETTINGS: Omit<NotificationSettings, 'id' | 'user_id' | 'created_a
 };
 
 export default function Settings() {
-  const { user, signOut } = useAuth();
+  const { user, signOut, updatePassword } = useAuth();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Profile state
+  const [, setProfile] = useState<UserProfile | null>(null);
+  const [profileForm, setProfileForm] = useState({
+    fullName: '',
+    mobileNumber: '',
+    country: 'India',
+  });
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [loadingProfile, setLoadingProfile] = useState(true);
+  const [savingProfile, setSavingProfile] = useState(false);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+
+  // Password state
+  const [passwordForm, setPasswordForm] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: '',
+  });
+  const [changingPassword, setChangingPassword] = useState(false);
+
+  // Notification settings state
   const [settings, setSettings] = useState<NotificationSettings | null>(null);
-  const [saving, setSaving] = useState(false);
   const [loadingSettings, setLoadingSettings] = useState(true);
   const [settingsError, setSettingsError] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
 
+  // Load profile
+  useEffect(() => {
+    const loadProfile = async () => {
+      if (!user) return;
+      setLoadingProfile(true);
+
+      const { data, error } = await supabase
+        .from('user_profiles')
+        .select('*')
+        .eq('user_id', user.id)
+        .single();
+
+      if (error && error.code === 'PGRST116') {
+        // Create new profile
+        const { data: newProfile } = await supabase
+          .from('user_profiles')
+          .insert({ user_id: user.id, full_name: '' })
+          .select()
+          .single();
+        if (newProfile) {
+          setProfile(newProfile);
+          setProfileForm({
+            fullName: newProfile.full_name || '',
+            mobileNumber: newProfile.mobile_number || '',
+            country: newProfile.country || 'India',
+          });
+          setAvatarUrl(newProfile.avatar_url);
+        }
+      } else if (data) {
+        setProfile(data);
+        setProfileForm({
+          fullName: data.full_name || '',
+          mobileNumber: data.mobile_number || '',
+          country: data.country || 'India',
+        });
+        setAvatarUrl(data.avatar_url);
+      }
+      setLoadingProfile(false);
+    };
+
+    loadProfile();
+  }, [user]);
+
+  // Load notification settings
   useEffect(() => {
     const loadSettings = async () => {
       if (!user) return;
@@ -36,7 +111,6 @@ export default function Settings() {
         .single();
 
       if (error && error.code === 'PGRST116') {
-        // No settings found, create default settings
         const { data: newData, error: insertError } = await supabase
           .from('notification_settings')
           .insert({ user_id: user.id, ...DEFAULT_SETTINGS })
@@ -59,6 +133,111 @@ export default function Settings() {
     loadSettings();
   }, [user]);
 
+  const handleSaveProfile = async () => {
+    if (!user) return;
+    setSavingProfile(true);
+
+    try {
+      const { error } = await supabase
+        .from('user_profiles')
+        .update({
+          full_name: profileForm.fullName.trim(),
+          mobile_number: profileForm.mobileNumber || null,
+          country: profileForm.country,
+        })
+        .eq('user_id', user.id);
+
+      if (error) {
+        toast.error('Failed to update profile');
+      } else {
+        toast.success('Profile updated successfully');
+      }
+    } catch {
+      toast.error('Something went wrong');
+    } finally {
+      setSavingProfile(false);
+    }
+  };
+
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+
+    // Validate file
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please upload an image file');
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Image must be less than 5MB');
+      return;
+    }
+
+    setUploadingAvatar(true);
+
+    try {
+      const fileExt = file.name.split('.').pop();
+      const filePath = `${user.id}/avatar.${fileExt}`;
+
+      // Upload to storage
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(filePath, file, { upsert: true });
+
+      if (uploadError) {
+        toast.error('Failed to upload image');
+        return;
+      }
+
+      const { data: urlData } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(filePath);
+
+      // Update profile
+      await supabase
+        .from('user_profiles')
+        .update({ avatar_url: urlData.publicUrl })
+        .eq('user_id', user.id);
+
+      setAvatarUrl(urlData.publicUrl + '?t=' + Date.now());
+      toast.success('Profile picture updated');
+    } catch {
+      toast.error('Failed to upload image');
+    } finally {
+      setUploadingAvatar(false);
+    }
+  };
+
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+      toast.error('New passwords do not match');
+      return;
+    }
+
+    if (passwordForm.newPassword.length < 8) {
+      toast.error('Password must be at least 8 characters');
+      return;
+    }
+
+    setChangingPassword(true);
+
+    try {
+      const { error } = await updatePassword(passwordForm.newPassword);
+      if (error) {
+        toast.error(error.message);
+      } else {
+        toast.success('Password changed successfully');
+        setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
+      }
+    } catch {
+      toast.error('Failed to change password');
+    } finally {
+      setChangingPassword(false);
+    }
+  };
+
   const updateSetting = async (key: keyof NotificationSettings, value: boolean) => {
     if (!user || !settings) return;
     setSaving(true);
@@ -76,33 +255,202 @@ export default function Settings() {
     setSaving(false);
   };
 
+  const handleSignOut = () => {
+    if (window.confirm('Are you sure you want to sign out?')) {
+      signOut();
+    }
+  };
+
   return (
-    <div className="max-w-2xl mx-auto space-y-6">
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+      className="max-w-2xl mx-auto space-y-6 pb-8"
+    >
       <div>
         <h1 className="text-2xl font-bold text-foreground">Settings</h1>
-        <p className="text-muted-foreground mt-1">Manage your account and notification preferences</p>
+        <p className="text-muted-foreground mt-1">Manage your account and preferences</p>
       </div>
 
+      {/* Profile Card */}
       <Card>
         <CardHeader>
           <div className="flex items-center gap-2">
             <User className="h-5 w-5 text-accent" />
-            <CardTitle>Account</CardTitle>
+            <CardTitle>Profile</CardTitle>
           </div>
-          <CardDescription>Your account information</CardDescription>
+          <CardDescription>Update your personal information</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div>
-            <Label className="text-muted-foreground text-sm">Email</Label>
-            <p className="text-foreground">{user?.email}</p>
-          </div>
-          <div>
-            <Label className="text-muted-foreground text-sm">Member since</Label>
-            <p className="text-foreground">{user?.created_at ? new Date(user.created_at).toLocaleDateString() : 'N/A'}</p>
-          </div>
+        <CardContent className="space-y-6">
+          {loadingProfile ? (
+            <div className="flex justify-center py-8">
+              <Loader2 className="h-6 w-6 animate-spin text-accent" />
+            </div>
+          ) : (
+            <>
+              {/* Avatar */}
+              <div className="flex items-center gap-4">
+                <div className="relative">
+                  <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center overflow-hidden border-2 border-border">
+                    {avatarUrl ? (
+                      <img src={avatarUrl} alt="Profile" className="w-full h-full object-cover" />
+                    ) : (
+                      <User className="h-10 w-10 text-muted-foreground" />
+                    )}
+                  </div>
+                  <button
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={uploadingAvatar}
+                    className="absolute -bottom-1 -right-1 p-1.5 bg-accent text-white rounded-full hover:bg-accent/90 transition-colors disabled:opacity-50"
+                    aria-label="Upload profile picture"
+                  >
+                    {uploadingAvatar ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Camera className="h-4 w-4" />
+                    )}
+                  </button>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleAvatarUpload}
+                    className="hidden"
+                  />
+                </div>
+                <div>
+                  <p className="text-sm font-medium">Profile Picture</p>
+                  <p className="text-xs text-muted-foreground">JPG, PNG or GIF. Max 5MB.</p>
+                </div>
+              </div>
+
+              <Separator />
+
+              {/* Form Fields */}
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="fullName">Full Name</Label>
+                  <Input
+                    id="fullName"
+                    value={profileForm.fullName}
+                    onChange={(e) => setProfileForm({ ...profileForm, fullName: e.target.value })}
+                    placeholder="John Doe"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email</Label>
+                  <Input
+                    id="email"
+                    value={user?.email || ''}
+                    disabled
+                    className="bg-muted"
+                  />
+                  <p className="text-xs text-muted-foreground">Email cannot be changed</p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="mobile">Mobile Number</Label>
+                  <Input
+                    id="mobile"
+                    value={profileForm.mobileNumber}
+                    onChange={(e) => setProfileForm({ ...profileForm, mobileNumber: sanitizePhoneNumber(e.target.value) })}
+                    placeholder="+91 9876543210"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="country">Country</Label>
+                  <select
+                    id="country"
+                    value={profileForm.country}
+                    onChange={(e) => setProfileForm({ ...profileForm, country: e.target.value })}
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                  >
+                    {COUNTRIES.map((country) => (
+                      <option key={country} value={country}>{country}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Member Since</Label>
+                <p className="text-sm text-muted-foreground">
+                  {user?.created_at ? new Date(user.created_at).toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                  }) : 'N/A'}
+                </p>
+              </div>
+
+              <Button onClick={handleSaveProfile} disabled={savingProfile} className="w-full sm:w-auto">
+                {savingProfile ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    <Save className="h-4 w-4 mr-2" />
+                    Save Changes
+                  </>
+                )}
+              </Button>
+            </>
+          )}
         </CardContent>
       </Card>
 
+      {/* Change Password Card */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <Lock className="h-5 w-5 text-accent" />
+            <CardTitle>Change Password</CardTitle>
+          </div>
+          <CardDescription>Update your password to keep your account secure</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleChangePassword} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="newPassword">New Password</Label>
+              <Input
+                id="newPassword"
+                type="password"
+                value={passwordForm.newPassword}
+                onChange={(e) => setPasswordForm({ ...passwordForm, newPassword: e.target.value })}
+                placeholder="Enter new password"
+                minLength={8}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="confirmPassword">Confirm New Password</Label>
+              <Input
+                id="confirmPassword"
+                type="password"
+                value={passwordForm.confirmPassword}
+                onChange={(e) => setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })}
+                placeholder="Confirm new password"
+              />
+            </div>
+            <Button type="submit" disabled={changingPassword || !passwordForm.newPassword}>
+              {changingPassword ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Changing...
+                </>
+              ) : (
+                'Change Password'
+              )}
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
+
+      {/* Notifications Card */}
       <Card>
         <CardHeader>
           <div className="flex items-center gap-2">
@@ -113,7 +461,9 @@ export default function Settings() {
         </CardHeader>
         <CardContent className="space-y-4">
           {loadingSettings ? (
-            <p className="text-sm text-muted-foreground">Loading notification settings...</p>
+            <div className="flex justify-center py-4">
+              <Loader2 className="h-6 w-6 animate-spin text-accent" />
+            </div>
           ) : settingsError ? (
             <p className="text-sm text-destructive">{settingsError}</p>
           ) : settings ? (
@@ -154,20 +504,28 @@ export default function Settings() {
         </CardContent>
       </Card>
 
+      {/* Danger Zone */}
       <Card className="border-destructive/30">
         <CardHeader>
           <div className="flex items-center gap-2">
             <Shield className="h-5 w-5 text-destructive" />
             <CardTitle>Danger Zone</CardTitle>
           </div>
+          <CardDescription>Irreversible and destructive actions</CardDescription>
         </CardHeader>
-        <CardContent>
-          <Button variant="destructive" onClick={signOut}>
-            Sign Out
-          </Button>
+        <CardContent className="space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-4 bg-muted/50 rounded-lg">
+            <div>
+              <p className="font-medium">Sign Out</p>
+              <p className="text-sm text-muted-foreground">Sign out of your account on this device</p>
+            </div>
+            <Button variant="outline" onClick={handleSignOut}>
+              Sign Out
+            </Button>
+          </div>
         </CardContent>
       </Card>
-    </div>
+    </motion.div>
   );
 }
 
@@ -184,21 +542,27 @@ function ToggleRow({
   onChange: (value: boolean) => void;
   disabled: boolean;
 }) {
+  const id = label.toLowerCase().replace(/\s+/g, '-');
+
   return (
     <div className="flex items-center justify-between">
       <div>
-        <p className="text-sm font-medium text-foreground">{label}</p>
+        <label htmlFor={id} className="text-sm font-medium text-foreground cursor-pointer">{label}</label>
         <p className="text-xs text-muted-foreground">{description}</p>
       </div>
       <button
+        id={id}
+        role="switch"
+        aria-checked={checked}
+        aria-label={label}
         onClick={() => onChange(!checked)}
         disabled={disabled}
-        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 ${
           checked ? 'bg-accent' : 'bg-muted'
-        }`}
+        } ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
       >
         <span
-          className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+          className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition-transform ${
             checked ? 'translate-x-6' : 'translate-x-1'
           }`}
         />

@@ -1,32 +1,56 @@
 import { useState, useCallback } from 'react';
 import { supabase } from '@/services/supabase';
 import { useAuth } from '@/context/AuthContext';
+import { sanitizeHtml } from '@/utils/security';
 import type { Bill, BillFormData } from '@/types';
+
+const PAGE_SIZE = 20;
 
 export function useBills() {
   const { user } = useAuth();
   const [bills, setBills] = useState<Bill[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [hasMore, setHasMore] = useState(true);
+  const [page, setPage] = useState(0);
 
-  const fetchBills = useCallback(async () => {
+  const fetchBills = useCallback(async (reset = true) => {
     if (!user) return;
     setLoading(true);
     setError(null);
-    const { data, error: fetchError } = await supabase
+
+    const currentPage = reset ? 0 : page;
+    const from = currentPage * PAGE_SIZE;
+    const to = from + PAGE_SIZE - 1;
+
+    const { data, error: fetchError, count } = await supabase
       .from('bills')
-      .select('*')
+      .select('*', { count: 'exact' })
       .eq('user_id', user.id)
       .is('deleted_at', null)
-      .order('created_at', { ascending: false });
+      .order('created_at', { ascending: false })
+      .range(from, to);
 
     if (fetchError) {
       setError(fetchError.message);
     } else {
-      setBills(data ?? []);
+      if (reset) {
+        setBills(data ?? []);
+        setPage(1);
+      } else {
+        setBills((prev) => [...prev, ...(data ?? [])]);
+        setPage(currentPage + 1);
+      }
+      setHasMore((count ?? 0) > from + (data?.length ?? 0));
     }
     setLoading(false);
-  }, [user]);
+  }, [user, page]);
+
+  const loadMore = useCallback(() => {
+    if (!loading && hasMore) {
+      fetchBills(false);
+    }
+  }, [loading, hasMore, fetchBills]);
 
   const fetchBill = useCallback(async (id: string) => {
     if (!user) throw new Error('Not authenticated');
@@ -47,7 +71,9 @@ export function useBills() {
     let bill_image_url: string | null = null;
 
     if (imageFile) {
-      const filePath = `${user.id}/${Date.now()}_${imageFile.name}`;
+      // Sanitize filename
+      const sanitizedName = imageFile.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+      const filePath = `${user.id}/${Date.now()}_${sanitizedName}`;
       const { error: uploadError } = await supabase.storage
         .from('bill-images')
         .upload(filePath, imageFile);
@@ -59,52 +85,80 @@ export function useBills() {
       bill_image_url = urlData.publicUrl;
     }
 
+    // Sanitize text inputs to prevent XSS
     const { data, error: insertError } = await supabase
       .from('bills')
       .insert({
         user_id: user.id,
-        product_name: formData.product_name,
-        brand: formData.brand || null,
+        product_name: sanitizeHtml(formData.product_name),
+        brand: formData.brand ? sanitizeHtml(formData.brand) : null,
         purchase_date: formData.purchase_date,
-        warranty_period_months: parseInt(formData.warranty_period_months) || 12,
+        warranty_period_months: Math.min(Math.max(parseInt(formData.warranty_period_months) || 12, 0), 240),
         warranty_expiry: formData.warranty_expiry,
-        invoice_number: formData.invoice_number || null,
-        store_name: formData.store_name,
+        invoice_number: formData.invoice_number ? sanitizeHtml(formData.invoice_number) : null,
+        store_name: sanitizeHtml(formData.store_name),
         category: formData.category,
-        price: parseFloat(formData.price) || 0,
+        price: Math.max(parseFloat(formData.price) || 0, 0),
         currency: formData.currency || 'INR',
-        notes: formData.notes || null,
+        notes: formData.notes ? sanitizeHtml(formData.notes) : null,
         bill_image_url,
       })
       .select()
       .single();
 
     if (insertError) throw insertError;
+
+    // Add to local state
+    setBills((prev) => [data as Bill, ...prev]);
     return data as Bill;
   };
 
-  const updateBill = async (id: string, formData: Partial<BillFormData>) => {
+  const updateBill = async (id: string, formData: Partial<BillFormData>, newImageFile?: File) => {
+    if (!user) throw new Error('Not authenticated');
+
     const update: Record<string, unknown> = {};
-    if (formData.product_name !== undefined) update.product_name = formData.product_name;
-    if (formData.brand !== undefined) update.brand = formData.brand || null;
+
+    if (formData.product_name !== undefined) update.product_name = sanitizeHtml(formData.product_name);
+    if (formData.brand !== undefined) update.brand = formData.brand ? sanitizeHtml(formData.brand) : null;
     if (formData.purchase_date !== undefined) update.purchase_date = formData.purchase_date;
-    if (formData.warranty_period_months !== undefined) update.warranty_period_months = parseInt(formData.warranty_period_months);
+    if (formData.warranty_period_months !== undefined) {
+      update.warranty_period_months = Math.min(Math.max(parseInt(formData.warranty_period_months) || 12, 0), 240);
+    }
     if (formData.warranty_expiry !== undefined) update.warranty_expiry = formData.warranty_expiry;
-    if (formData.invoice_number !== undefined) update.invoice_number = formData.invoice_number || null;
-    if (formData.store_name !== undefined) update.store_name = formData.store_name;
+    if (formData.invoice_number !== undefined) update.invoice_number = formData.invoice_number ? sanitizeHtml(formData.invoice_number) : null;
+    if (formData.store_name !== undefined) update.store_name = sanitizeHtml(formData.store_name);
     if (formData.category !== undefined) update.category = formData.category;
-    if (formData.price !== undefined) update.price = parseFloat(formData.price) || 0;
+    if (formData.price !== undefined) update.price = Math.max(parseFloat(formData.price) || 0, 0);
     if (formData.currency !== undefined) update.currency = formData.currency;
-    if (formData.notes !== undefined) update.notes = formData.notes || null;
+    if (formData.notes !== undefined) update.notes = formData.notes ? sanitizeHtml(formData.notes) : null;
+
+    // Handle new image upload
+    if (newImageFile) {
+      const sanitizedName = newImageFile.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+      const filePath = `${user.id}/${Date.now()}_${sanitizedName}`;
+      const { error: uploadError } = await supabase.storage
+        .from('bill-images')
+        .upload(filePath, newImageFile);
+      if (uploadError) throw uploadError;
+
+      const { data: urlData } = supabase.storage
+        .from('bill-images')
+        .getPublicUrl(filePath);
+      update.bill_image_url = urlData.publicUrl;
+    }
 
     const { data, error: updateError } = await supabase
       .from('bills')
       .update(update)
       .eq('id', id)
+      .eq('user_id', user.id)
       .select()
       .single();
 
     if (updateError) throw updateError;
+
+    // Update local state
+    setBills((prev) => prev.map((b) => (b.id === id ? (data as Bill) : b)));
     return data as Bill;
   };
 
@@ -120,5 +174,16 @@ export function useBills() {
     setBills((prev) => prev.filter((b) => b.id !== billId));
   };
 
-  return { bills, loading, error, fetchBills, fetchBill, createBill, updateBill, deleteBill };
+  return {
+    bills,
+    loading,
+    error,
+    hasMore,
+    fetchBills,
+    fetchBill,
+    createBill,
+    updateBill,
+    deleteBill,
+    loadMore,
+  };
 }

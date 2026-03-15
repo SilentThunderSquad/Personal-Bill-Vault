@@ -2,18 +2,24 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useBills } from '@/hooks/useBills';
 import { BillDetailView } from '@/components/bills/BillDetailView';
+import { BillForm } from '@/components/bills/BillForm';
 import { DeleteConfirmDialog } from '@/components/bills/DeleteConfirmDialog';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
+import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
-import type { Bill } from '@/types';
+import { ArrowLeft } from 'lucide-react';
+import { motion } from 'framer-motion';
+import type { Bill, BillFormData } from '@/types';
 
 export default function BillDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { fetchBill, deleteBill } = useBills();
+  const { fetchBill, updateBill, deleteBill } = useBills();
   const [bill, setBill] = useState<Bill | null>(null);
   const [loading, setLoading] = useState(true);
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [editMode, setEditMode] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -35,6 +41,30 @@ export default function BillDetailPage() {
     }
   };
 
+  const handleEdit = () => {
+    setEditMode(true);
+  };
+
+  const handleCancelEdit = () => {
+    setEditMode(false);
+  };
+
+  const handleSaveEdit = async (formData: BillFormData, imageFile?: File) => {
+    if (!id || !bill) return;
+    setSaving(true);
+    try {
+      const updatedBill = await updateBill(id, formData, imageFile);
+      setBill(updatedBill);
+      setEditMode(false);
+      toast.success('Bill updated successfully');
+    } catch (err) {
+      console.error('Update error:', err);
+      toast.error('Failed to update bill');
+    } finally {
+      setSaving(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
@@ -47,13 +77,52 @@ export default function BillDetailPage() {
     return (
       <div className="text-center py-20">
         <p className="text-muted-foreground">Bill not found</p>
+        <Button variant="outline" onClick={() => navigate('/bills')} className="mt-4">
+          Go to Bills
+        </Button>
       </div>
+    );
+  }
+
+  if (editMode) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="max-w-3xl mx-auto"
+      >
+        <div className="flex items-center justify-between mb-6">
+          <Button variant="ghost" size="sm" onClick={handleCancelEdit}>
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Cancel
+          </Button>
+          <h1 className="text-xl font-bold text-foreground">Edit Bill</h1>
+        </div>
+        <BillForm
+          initialData={{
+            product_name: bill.product_name,
+            brand: bill.brand || '',
+            purchase_date: bill.purchase_date,
+            warranty_period_months: String(bill.warranty_period_months),
+            warranty_expiry: bill.warranty_expiry,
+            invoice_number: bill.invoice_number || '',
+            store_name: bill.store_name,
+            category: bill.category,
+            price: String(bill.price),
+            currency: bill.currency,
+            notes: bill.notes || '',
+          }}
+          onSubmit={handleSaveEdit}
+          submitLabel={saving ? 'Saving...' : 'Save Changes'}
+          isSubmitting={saving}
+        />
+      </motion.div>
     );
   }
 
   return (
     <>
-      <BillDetailView bill={bill} onDelete={() => setDeleteOpen(true)} />
+      <BillDetailView bill={bill} onDelete={() => setDeleteOpen(true)} onEdit={handleEdit} />
       <DeleteConfirmDialog
         open={deleteOpen}
         onClose={() => setDeleteOpen(false)}

@@ -64,6 +64,26 @@ export interface NotificationSettings {
   updated_at: string;
 }
 
+export interface UserProfile {
+  id: string;
+  user_id: string;
+  full_name: string | null;
+  mobile_number: string | null;
+  country: string | null;
+  avatar_url: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface SignUpFormData {
+  email: string;
+  password: string;
+  confirmPassword: string;
+  fullName: string;
+  mobileNumber: string;
+  country: string;
+}
+
 export type WarrantyStatus = 'active' | 'expiring' | 'expired';
 
 export interface DashboardStats {
