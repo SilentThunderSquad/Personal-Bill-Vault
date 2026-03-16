@@ -21,38 +21,38 @@ const problems = [
 
 export function ProblemSection() {
   return (
-    <section className="py-20 px-4 bg-muted/30">
+    <section className="py-12 sm:py-16 md:py-20 px-4 bg-muted/30">
       <div className="max-w-6xl mx-auto">
         <motion.div
-          className="text-center mb-16"
+          className="text-center mb-10 sm:mb-16"
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.5 }}
         >
-          <h2 className="text-3xl sm:text-4xl font-bold text-foreground mb-4">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-foreground mb-3 sm:mb-4">
             The Problem with Paper Bills
           </h2>
-          <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+          <p className="text-sm sm:text-base md:text-lg text-muted-foreground max-w-2xl mx-auto px-2">
             Traditional bill management fails you when it matters most
           </p>
         </motion.div>
 
-        <div className="grid md:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6 md:gap-8">
           {problems.map((problem, index) => (
             <motion.div
               key={problem.title}
-              className="bg-card border border-border rounded-xl p-6 text-center"
+              className="bg-card border border-border rounded-xl p-4 sm:p-6 text-center"
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.5, delay: index * 0.1 }}
             >
-              <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-destructive/10 mb-4">
-                <problem.icon className="h-6 w-6 text-destructive" />
+              <div className="inline-flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-destructive/10 mb-3 sm:mb-4">
+                <problem.icon className="h-5 w-5 sm:h-6 sm:w-6 text-destructive" />
               </div>
-              <h3 className="text-lg font-semibold text-foreground mb-2">{problem.title}</h3>
-              <p className="text-muted-foreground text-sm">{problem.description}</p>
+              <h3 className="text-base sm:text-lg font-semibold text-foreground mb-2">{problem.title}</h3>
+              <p className="text-xs sm:text-sm text-muted-foreground">{problem.description}</p>
             </motion.div>
           ))}
         </div>

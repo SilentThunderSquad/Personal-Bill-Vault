@@ -25,21 +25,21 @@ export function BillDetailView({ bill, onDelete, onEdit }: BillDetailViewProps) 
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
-      className="max-w-3xl mx-auto space-y-6"
+      className="max-w-3xl mx-auto space-y-4 sm:space-y-6"
     >
-      <div className="flex items-center justify-between flex-wrap gap-4">
-        <Button variant="ghost" size="sm" onClick={() => navigate(-1)}>
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Back
+      <div className="flex items-center justify-between flex-wrap gap-3 sm:gap-4">
+        <Button variant="ghost" size="sm" onClick={() => navigate(-1)} className="gap-1.5">
+          <ArrowLeft className="h-4 w-4" />
+          <span className="hidden sm:inline">Back</span>
         </Button>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={onEdit}>
-            <Edit2 className="h-4 w-4 mr-2" />
-            Edit
+          <Button variant="outline" size="sm" onClick={onEdit} className="gap-1.5 h-9">
+            <Edit2 className="h-4 w-4" />
+            <span className="hidden sm:inline">Edit</span>
           </Button>
-          <Button variant="destructive" size="sm" onClick={onDelete}>
-            <Trash2 className="h-4 w-4 mr-2" />
-            Delete
+          <Button variant="destructive" size="sm" onClick={onDelete} className="gap-1.5 h-9">
+            <Trash2 className="h-4 w-4" />
+            <span className="hidden sm:inline">Delete</span>
           </Button>
         </div>
       </div>
@@ -54,7 +54,7 @@ export function BillDetailView({ bill, onDelete, onEdit }: BillDetailViewProps) 
             <WarrantyBadge expiryDate={bill.warranty_expiry} />
           </div>
         </CardHeader>
-        <CardContent className="space-y-6">
+        <CardContent className="space-y-4 sm:space-y-6 px-4 sm:px-6">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
             <DetailRow icon={CreditCard} label="Price" value={formatCurrency(bill.price, bill.currency)} />
             <DetailRow icon={Store} label="Store" value={bill.store_name} />

@@ -32,32 +32,32 @@ export function ForgotPasswordForm() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background px-4">
-      <div className="w-full max-w-md space-y-8">
+    <div className="min-h-screen flex items-center justify-center bg-background px-4 py-8">
+      <div className="w-full max-w-md space-y-6 sm:space-y-8">
         <div className="text-center">
-          <Link to="/" className="inline-flex items-center gap-2 mb-6">
-            <Shield className="h-8 w-8 text-accent" />
-            <span className="text-2xl font-bold text-foreground">Bill Vault</span>
+          <Link to="/" className="inline-flex items-center gap-2 mb-4 sm:mb-6">
+            <Shield className="h-7 w-7 sm:h-8 sm:w-8 text-accent" />
+            <span className="text-xl sm:text-2xl font-bold text-foreground">Bill Vault</span>
           </Link>
-          <h1 className="text-2xl font-bold text-foreground">Reset your password</h1>
-          <p className="text-muted-foreground mt-2">
+          <h1 className="text-xl sm:text-2xl font-bold text-foreground">Reset your password</h1>
+          <p className="text-sm sm:text-base text-muted-foreground mt-2">
             {sent ? 'Check your email for a reset link' : "Enter your email and we will send you a reset link"}
           </p>
         </div>
         {!sent ? (
-          <form onSubmit={handleSubmit} className="space-y-4 bg-card p-8 rounded-xl border border-border">
+          <form onSubmit={handleSubmit} className="space-y-4 bg-card p-5 sm:p-8 rounded-xl border border-border">
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" placeholder="you@example.com" value={email} onChange={(e) => setEmail(e.target.value)} required />
+              <Input id="email" type="email" placeholder="you@example.com" value={email} onChange={(e) => setEmail(e.target.value)} required className="h-11" />
             </div>
-            <Button type="submit" className="w-full bg-accent hover:bg-accent/90" disabled={loading}>
+            <Button type="submit" className="w-full bg-accent hover:bg-accent/90 h-11 text-base" disabled={loading}>
               {loading ? 'Sending...' : 'Send Reset Link'}
             </Button>
           </form>
         ) : (
-          <div className="bg-card p-8 rounded-xl border border-border text-center space-y-4">
-            <p className="text-foreground">We sent a password reset link to <strong>{email}</strong>.</p>
-            <Button variant="outline" onClick={() => setSent(false)} className="w-full">Send again</Button>
+          <div className="bg-card p-5 sm:p-8 rounded-xl border border-border text-center space-y-4">
+            <p className="text-sm sm:text-base text-foreground">We sent a password reset link to <strong>{email}</strong>.</p>
+            <Button variant="outline" onClick={() => setSent(false)} className="w-full h-11">Send again</Button>
           </div>
         )}
         <Link to="/login" className="flex items-center justify-center gap-2 text-sm text-muted-foreground hover:text-foreground">

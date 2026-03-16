@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { PRODUCT_CATEGORIES, CURRENCY_OPTIONS } from '@/utils/constants';
 import { calculateExpiryDate } from '@/utils/formatters';
 import { validateBillForm } from '@/utils/validators';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Package, Calendar, Store, FileText, Save } from 'lucide-react';
 import type { BillFormData } from '@/types';
 
 interface BillFormProps {
@@ -32,6 +32,17 @@ const emptyForm: BillFormData = {
   currency: 'INR',
   notes: '',
 };
+
+function SectionHeader({ icon: Icon, title }: { icon: React.ElementType; title: string }) {
+  return (
+    <div className="flex items-center gap-2 pb-3 border-b border-border mb-4">
+      <div className="p-1.5 rounded-md bg-accent/10">
+        <Icon className="h-4 w-4 text-accent" />
+      </div>
+      <h3 className="text-sm font-medium text-foreground">{title}</h3>
+    </div>
+  );
+}
 
 export function BillForm({
   initialData,
@@ -86,183 +97,209 @@ export function BillForm({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="bg-card border border-border rounded-xl p-4 sm:p-6 space-y-5">
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="product_name">Product Name <span className="text-destructive">*</span></Label>
-          <Input
-            id="product_name"
-            value={form.product_name}
-            onChange={(e) => handleChange('product_name', e.target.value)}
-            placeholder="e.g. MacBook Pro 16"
-            className={errors.product_name ? 'border-destructive' : ''}
-            aria-invalid={!!errors.product_name}
-            aria-describedby={errors.product_name ? 'product_name-error' : undefined}
-          />
-          {errors.product_name && (
-            <p id="product_name-error" className="text-xs text-destructive" role="alert">{errors.product_name}</p>
-          )}
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="brand">Brand</Label>
-          <Input
-            id="brand"
-            value={form.brand}
-            onChange={(e) => handleChange('brand', e.target.value)}
-            placeholder="e.g. Apple"
-          />
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="purchase_date">Purchase Date <span className="text-destructive">*</span></Label>
-          <Input
-            id="purchase_date"
-            type="date"
-            value={form.purchase_date}
-            onChange={(e) => handleChange('purchase_date', e.target.value)}
-            className={errors.purchase_date ? 'border-destructive' : ''}
-            aria-invalid={!!errors.purchase_date}
-          />
-          {errors.purchase_date && (
-            <p className="text-xs text-destructive" role="alert">{errors.purchase_date}</p>
-          )}
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="warranty_period_months">Warranty Period (months) <span className="text-destructive">*</span></Label>
-          <Input
-            id="warranty_period_months"
-            type="number"
-            min="0"
-            max="240"
-            value={form.warranty_period_months}
-            onChange={(e) => handleChange('warranty_period_months', e.target.value)}
-            placeholder="12"
-            className={errors.warranty_period_months ? 'border-destructive' : ''}
-          />
-          {errors.warranty_period_months && (
-            <p className="text-xs text-destructive" role="alert">{errors.warranty_period_months}</p>
-          )}
+    <form onSubmit={handleSubmit} className="space-y-6">
+      {/* Product Information */}
+      <div className="bg-muted/30 rounded-xl p-4 sm:p-5">
+        <SectionHeader icon={Package} title="Product Information" />
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="product_name" className="text-sm">
+              Product Name <span className="text-destructive">*</span>
+            </Label>
+            <Input
+              id="product_name"
+              value={form.product_name}
+              onChange={(e) => handleChange('product_name', e.target.value)}
+              placeholder="e.g. MacBook Pro 16"
+              className={`h-11 ${errors.product_name ? 'border-destructive focus-visible:ring-destructive' : ''}`}
+              aria-invalid={!!errors.product_name}
+              aria-describedby={errors.product_name ? 'product_name-error' : undefined}
+            />
+            {errors.product_name && (
+              <p id="product_name-error" className="text-xs text-destructive" role="alert">{errors.product_name}</p>
+            )}
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="brand" className="text-sm">Brand</Label>
+            <Input
+              id="brand"
+              value={form.brand}
+              onChange={(e) => handleChange('brand', e.target.value)}
+              placeholder="e.g. Apple"
+              className="h-11"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="category" className="text-sm">
+              Category <span className="text-destructive">*</span>
+            </Label>
+            <Select value={form.category} onValueChange={(v) => v && handleChange('category', v)}>
+              <SelectTrigger className={`h-11 ${errors.category ? 'border-destructive' : ''}`}>
+                <SelectValue placeholder="Select category" />
+              </SelectTrigger>
+              <SelectContent>
+                {PRODUCT_CATEGORIES.map((cat) => (
+                  <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {errors.category && (
+              <p className="text-xs text-destructive" role="alert">{errors.category}</p>
+            )}
+          </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="warranty_expiry">Warranty Expiry</Label>
-          <Input
-            id="warranty_expiry"
-            type="date"
-            value={form.warranty_expiry}
-            onChange={(e) => handleChange('warranty_expiry', e.target.value)}
-          />
-          <p className="text-xs text-muted-foreground">Auto-calculated from purchase date + warranty period</p>
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="invoice_number">Invoice Number</Label>
-          <Input
-            id="invoice_number"
-            value={form.invoice_number}
-            onChange={(e) => handleChange('invoice_number', e.target.value)}
-            placeholder="e.g. INV-2024-001"
-          />
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="store_name">Store Name <span className="text-destructive">*</span></Label>
-          <Input
-            id="store_name"
-            value={form.store_name}
-            onChange={(e) => handleChange('store_name', e.target.value)}
-            placeholder="e.g. Amazon, Croma"
-            className={errors.store_name ? 'border-destructive' : ''}
-          />
-          {errors.store_name && (
-            <p className="text-xs text-destructive" role="alert">{errors.store_name}</p>
-          )}
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="category">Category <span className="text-destructive">*</span></Label>
-          <Select value={form.category} onValueChange={(v) => v && handleChange('category', v)}>
-            <SelectTrigger className={errors.category ? 'border-destructive' : ''}>
-              <SelectValue placeholder="Select category" />
-            </SelectTrigger>
-            <SelectContent>
-              {PRODUCT_CATEGORIES.map((cat) => (
-                <SelectItem key={cat} value={cat}>{cat}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          {errors.category && (
-            <p className="text-xs text-destructive" role="alert">{errors.category}</p>
-          )}
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="price">Price <span className="text-destructive">*</span></Label>
-          <Input
-            id="price"
-            type="number"
-            min="0"
-            step="0.01"
-            value={form.price}
-            onChange={(e) => handleChange('price', e.target.value)}
-            placeholder="0.00"
-            className={errors.price ? 'border-destructive' : ''}
-          />
-          {errors.price && (
-            <p className="text-xs text-destructive" role="alert">{errors.price}</p>
-          )}
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="currency">Currency</Label>
-          <Select value={form.currency} onValueChange={(v) => v && handleChange('currency', v)}>
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {CURRENCY_OPTIONS.map((cur) => (
-                <SelectItem key={cur} value={cur}>{cur}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+      {/* Purchase Details */}
+      <div className="bg-muted/30 rounded-xl p-4 sm:p-5">
+        <SectionHeader icon={Store} title="Purchase Details" />
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="store_name" className="text-sm">
+              Store Name <span className="text-destructive">*</span>
+            </Label>
+            <Input
+              id="store_name"
+              value={form.store_name}
+              onChange={(e) => handleChange('store_name', e.target.value)}
+              placeholder="e.g. Amazon, Croma"
+              className={`h-11 ${errors.store_name ? 'border-destructive' : ''}`}
+            />
+            {errors.store_name && (
+              <p className="text-xs text-destructive" role="alert">{errors.store_name}</p>
+            )}
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="invoice_number" className="text-sm">Invoice Number</Label>
+            <Input
+              id="invoice_number"
+              value={form.invoice_number}
+              onChange={(e) => handleChange('invoice_number', e.target.value)}
+              placeholder="e.g. INV-2024-001"
+              className="h-11"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="price" className="text-sm">
+              Price <span className="text-destructive">*</span>
+            </Label>
+            <Input
+              id="price"
+              type="number"
+              min="0"
+              step="0.01"
+              value={form.price}
+              onChange={(e) => handleChange('price', e.target.value)}
+              placeholder="0.00"
+              className={`h-11 ${errors.price ? 'border-destructive' : ''}`}
+            />
+            {errors.price && (
+              <p className="text-xs text-destructive" role="alert">{errors.price}</p>
+            )}
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="currency" className="text-sm">Currency</Label>
+            <Select value={form.currency} onValueChange={(v) => v && handleChange('currency', v)}>
+              <SelectTrigger className="h-11">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {CURRENCY_OPTIONS.map((cur) => (
+                  <SelectItem key={cur} value={cur}>{cur}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
       </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="notes">Notes</Label>
+      {/* Warranty Information */}
+      <div className="bg-muted/30 rounded-xl p-4 sm:p-5">
+        <SectionHeader icon={Calendar} title="Warranty Information" />
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="purchase_date" className="text-sm">
+              Purchase Date <span className="text-destructive">*</span>
+            </Label>
+            <Input
+              id="purchase_date"
+              type="date"
+              value={form.purchase_date}
+              onChange={(e) => handleChange('purchase_date', e.target.value)}
+              className={`h-11 ${errors.purchase_date ? 'border-destructive' : ''}`}
+              aria-invalid={!!errors.purchase_date}
+            />
+            {errors.purchase_date && (
+              <p className="text-xs text-destructive" role="alert">{errors.purchase_date}</p>
+            )}
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="warranty_period_months" className="text-sm">
+              Warranty Period (months) <span className="text-destructive">*</span>
+            </Label>
+            <Input
+              id="warranty_period_months"
+              type="number"
+              min="0"
+              max="240"
+              value={form.warranty_period_months}
+              onChange={(e) => handleChange('warranty_period_months', e.target.value)}
+              placeholder="12"
+              className={`h-11 ${errors.warranty_period_months ? 'border-destructive' : ''}`}
+            />
+            {errors.warranty_period_months && (
+              <p className="text-xs text-destructive" role="alert">{errors.warranty_period_months}</p>
+            )}
+          </div>
+          <div className="space-y-2 sm:col-span-2">
+            <Label htmlFor="warranty_expiry" className="text-sm">Warranty Expiry</Label>
+            <Input
+              id="warranty_expiry"
+              type="date"
+              value={form.warranty_expiry}
+              onChange={(e) => handleChange('warranty_expiry', e.target.value)}
+              className="h-11"
+            />
+            <p className="text-xs text-muted-foreground">Auto-calculated from purchase date + warranty period</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Additional Notes */}
+      <div className="bg-muted/30 rounded-xl p-4 sm:p-5">
+        <SectionHeader icon={FileText} title="Additional Notes" />
         <Textarea
           id="notes"
           value={form.notes}
           onChange={(e) => handleChange('notes', e.target.value)}
-          placeholder="Any additional notes..."
+          placeholder="Any additional notes about this product..."
           rows={3}
           className="resize-none"
         />
       </div>
 
+      {/* Action Buttons */}
       <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center gap-3 pt-2">
         {onCancel && (
-          <Button type="button" variant="outline" onClick={onCancel} className="w-full sm:w-auto">
+          <Button type="button" variant="outline" onClick={onCancel} className="w-full sm:w-auto h-11">
             Cancel
           </Button>
         )}
         <Button
           type="submit"
-          className="bg-accent hover:bg-accent/90 w-full sm:w-auto"
+          className="bg-accent hover:bg-accent/90 w-full sm:w-auto h-11 gap-2"
           disabled={isDisabled}
         >
           {isDisabled ? (
             <>
-              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              <Loader2 className="h-4 w-4 animate-spin" />
               Saving...
             </>
           ) : (
-            submitLabel
+            <>
+              <Save className="h-4 w-4" />
+              {submitLabel}
+            </>
           )}
         </Button>
       </div>

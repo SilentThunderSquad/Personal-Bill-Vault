@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback } from 'react';
-import { Upload, Camera, X, Image as ImageIcon } from 'lucide-react';
+import { Upload, Camera, X, Image as ImageIcon, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { motion } from 'framer-motion';
 
 interface ImageUploadProps {
   onImageSelect: (file: File) => void;
@@ -10,10 +11,12 @@ interface ImageUploadProps {
 export function ImageUpload({ onImageSelect, mode }: ImageUploadProps) {
   const [preview, setPreview] = useState<string | null>(null);
   const [dragActive, setDragActive] = useState(false);
+  const [fileName, setFileName] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFile = useCallback((file: File) => {
     if (!file.type.startsWith('image/')) return;
+    setFileName(file.name);
     const reader = new FileReader();
     reader.onload = (e) => setPreview(e.target?.result as string);
     reader.readAsDataURL(file);
@@ -34,29 +37,56 @@ export function ImageUpload({ onImageSelect, mode }: ImageUploadProps) {
 
   const clearPreview = () => {
     setPreview(null);
+    setFileName(null);
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
   if (preview) {
     return (
-      <div className="relative rounded-xl border border-border overflow-hidden">
-        <img src={preview} alt="Bill preview" className="w-full max-h-96 object-contain bg-muted/30" />
-        <Button
-          variant="destructive"
-          size="icon"
-          className="absolute top-2 right-2 h-8 w-8"
-          onClick={clearPreview}
-        >
-          <X className="h-4 w-4" />
-        </Button>
-      </div>
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="relative rounded-xl border-2 border-accent/30 overflow-hidden bg-muted/20"
+      >
+        <div className="p-3 sm:p-4 bg-accent/5 border-b border-accent/20 flex items-center justify-between">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <div className="p-1.5 sm:p-2 rounded-full bg-accent/10">
+              <CheckCircle2 className="h-4 w-4 sm:h-5 sm:w-5 text-accent" />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-foreground">Image uploaded</p>
+              <p className="text-xs text-muted-foreground truncate max-w-[180px] sm:max-w-xs">
+                {fileName}
+              </p>
+            </div>
+          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={clearPreview}
+            className="text-muted-foreground hover:text-destructive h-8 px-2"
+          >
+            <X className="h-4 w-4 mr-1" />
+            <span className="hidden sm:inline">Remove</span>
+          </Button>
+        </div>
+        <div className="p-2 sm:p-4 flex justify-center bg-muted/10">
+          <img
+            src={preview}
+            alt="Bill preview"
+            className="max-h-64 sm:max-h-80 object-contain rounded-lg shadow-sm"
+          />
+        </div>
+      </motion.div>
     );
   }
 
   return (
     <div
-      className={`relative border-2 border-dashed rounded-xl p-8 text-center transition-colors ${
-        dragActive ? 'border-accent bg-accent/5' : 'border-border hover:border-accent/50'
+      className={`relative rounded-xl transition-all duration-200 ${
+        dragActive
+          ? 'border-2 border-accent bg-accent/5 shadow-lg shadow-accent/10'
+          : 'border-2 border-dashed border-muted-foreground/25 hover:border-accent/50 bg-muted/20 hover:bg-muted/30'
       }`}
       onDragOver={(e) => { e.preventDefault(); setDragActive(true); }}
       onDragLeave={() => setDragActive(false)}
@@ -71,36 +101,54 @@ export function ImageUpload({ onImageSelect, mode }: ImageUploadProps) {
         className="hidden"
       />
 
-      <div className="flex flex-col items-center gap-4">
-        <div className="p-4 rounded-full bg-accent/10">
+      <div className="flex flex-col items-center gap-4 sm:gap-5 py-8 sm:py-12 px-4">
+        <div className={`p-4 sm:p-5 rounded-2xl transition-colors ${
+          dragActive ? 'bg-accent/15' : 'bg-muted'
+        }`}>
           {mode === 'camera' ? (
-            <Camera className="h-8 w-8 text-accent" />
+            <Camera className={`h-8 w-8 sm:h-10 sm:w-10 ${dragActive ? 'text-accent' : 'text-muted-foreground'}`} />
           ) : (
-            <ImageIcon className="h-8 w-8 text-accent" />
+            <ImageIcon className={`h-8 w-8 sm:h-10 sm:w-10 ${dragActive ? 'text-accent' : 'text-muted-foreground'}`} />
           )}
         </div>
-        <div>
-          <p className="text-foreground font-medium">
+
+        <div className="text-center">
+          <p className="text-base sm:text-lg font-medium text-foreground">
             {mode === 'camera' ? 'Take a photo of your bill' : 'Drop your bill image here'}
           </p>
-          <p className="text-sm text-muted-foreground mt-1">
-            {mode === 'camera' ? 'Use your camera to capture the bill' : 'or click to browse (JPG, PNG, WebP)'}
+          <p className="text-sm text-muted-foreground mt-1.5">
+            {mode === 'camera'
+              ? 'Use your camera to capture the bill'
+              : 'Supports JPG, PNG, WebP up to 10MB'}
           </p>
         </div>
+
+        <div className="flex items-center gap-3">
+          {mode === 'upload' && (
+            <>
+              <div className="h-px w-10 sm:w-16 bg-border" />
+              <span className="text-xs text-muted-foreground">or</span>
+              <div className="h-px w-10 sm:w-16 bg-border" />
+            </>
+          )}
+        </div>
+
         <Button
-          variant="outline"
+          variant={mode === 'camera' ? 'default' : 'outline'}
           onClick={() => fileInputRef.current?.click()}
-          className="mt-2"
+          className={`h-11 px-6 text-sm font-medium gap-2 ${
+            mode === 'camera' ? 'bg-accent hover:bg-accent/90' : ''
+          }`}
         >
           {mode === 'camera' ? (
             <>
-              <Camera className="h-4 w-4 mr-2" />
+              <Camera className="h-4 w-4" />
               Open Camera
             </>
           ) : (
             <>
-              <Upload className="h-4 w-4 mr-2" />
-              Choose File
+              <Upload className="h-4 w-4" />
+              Browse Files
             </>
           )}
         </Button>

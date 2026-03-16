@@ -91,12 +91,12 @@ export default function BillDetailPage() {
         animate={{ opacity: 1, y: 0 }}
         className="max-w-3xl mx-auto"
       >
-        <div className="flex items-center justify-between mb-6">
-          <Button variant="ghost" size="sm" onClick={handleCancelEdit}>
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Cancel
+        <div className="flex items-center justify-between mb-4 sm:mb-6 gap-3">
+          <Button variant="ghost" size="sm" onClick={handleCancelEdit} className="gap-1.5">
+            <ArrowLeft className="h-4 w-4" />
+            <span className="hidden sm:inline">Cancel</span>
           </Button>
-          <h1 className="text-xl font-bold text-foreground">Edit Bill</h1>
+          <h1 className="text-lg sm:text-xl font-bold text-foreground">Edit Bill</h1>
         </div>
         <BillForm
           initialData={{

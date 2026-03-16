@@ -142,29 +142,29 @@ export function RegisterForm() {
         className="w-full max-w-md space-y-6"
       >
         <div className="text-center">
-          <Link to="/" className="inline-flex items-center gap-2 mb-6">
-            <Shield className="h-8 w-8 text-accent" />
-            <span className="text-2xl font-bold text-foreground">Bill Vault</span>
+          <Link to="/" className="inline-flex items-center gap-2 mb-4 sm:mb-6">
+            <Shield className="h-7 w-7 sm:h-8 sm:w-8 text-accent" />
+            <span className="text-xl sm:text-2xl font-bold text-foreground">Bill Vault</span>
           </Link>
-          <h1 className="text-2xl font-bold text-foreground">Create an account</h1>
-          <p className="text-muted-foreground mt-2">Start managing your warranties today</p>
+          <h1 className="text-xl sm:text-2xl font-bold text-foreground">Create an account</h1>
+          <p className="text-sm sm:text-base text-muted-foreground mt-2">Start managing your warranties today</p>
         </div>
 
         {!isConfigured && (
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="flex items-start gap-3 p-4 bg-destructive/10 border border-destructive/30 rounded-lg"
+            className="flex items-start gap-3 p-3 sm:p-4 bg-destructive/10 border border-destructive/30 rounded-lg"
           >
             <AlertTriangle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
-            <div className="text-sm text-destructive">
+            <div className="text-xs sm:text-sm text-destructive">
               <p className="font-semibold">Backend not configured</p>
               <p className="mt-1">Supabase environment variables are missing.</p>
             </div>
           </motion.div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-4 bg-card p-6 sm:p-8 rounded-xl border border-border shadow-lg">
+        <form onSubmit={handleSubmit} className="space-y-4 bg-card p-5 sm:p-8 rounded-xl border border-border shadow-lg">
           {/* Full Name */}
           <div className="space-y-2">
             <Label htmlFor="fullName">Full Name <span className="text-destructive">*</span></Label>
@@ -228,7 +228,7 @@ export function RegisterForm() {
               id="country"
               value={formData.country}
               onChange={(e) => handleChange('country', e.target.value)}
-              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+              className="flex h-10 sm:h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
             >
               {COUNTRIES.map((country) => (
                 <option key={country} value={country}>{country}</option>
@@ -334,7 +334,7 @@ export function RegisterForm() {
 
           <Button
             type="submit"
-            className="w-full bg-accent hover:bg-accent/90"
+            className="w-full bg-accent hover:bg-accent/90 h-11 text-base"
             disabled={loading || !isConfigured}
           >
             {loading ? 'Creating account...' : 'Create Account'}

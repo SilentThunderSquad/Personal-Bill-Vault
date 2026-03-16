@@ -42,50 +42,52 @@ export default function Bills() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-4 sm:space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">My Bills</h1>
-          <p className="text-muted-foreground mt-1">{bills.length} bills stored</p>
+          <h1 className="text-xl sm:text-2xl font-bold text-foreground">My Bills</h1>
+          <p className="text-sm sm:text-base text-muted-foreground mt-1">{bills.length} bills stored</p>
         </div>
-        <Button onClick={() => navigate('/bills/new')} className="bg-accent hover:bg-accent/90">
-          <PlusCircle className="h-4 w-4 mr-2" />
+        <Button onClick={() => navigate('/bills/new')} className="bg-accent hover:bg-accent/90 w-full sm:w-auto h-11 text-base">
+          <PlusCircle className="h-5 w-5 mr-2" />
           Add Bill
         </Button>
       </div>
 
-      <div className="flex flex-col sm:flex-row gap-3">
-        <div className="relative flex-1">
+      <div className="flex flex-col gap-3">
+        <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Search bills..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="pl-9"
+            className="pl-9 h-11"
           />
         </div>
-        <Select value={category} onValueChange={(v) => v && setCategory(v)}>
-          <SelectTrigger className="w-full sm:w-44">
-            <SelectValue placeholder="Category" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Categories</SelectItem>
-            {PRODUCT_CATEGORIES.map((cat) => (
-              <SelectItem key={cat} value={cat}>{cat}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Select value={status} onValueChange={(v) => v && setStatus(v as WarrantyStatus | 'all')}>
-          <SelectTrigger className="w-full sm:w-40">
-            <SelectValue placeholder="Status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Status</SelectItem>
-            <SelectItem value="active">Active</SelectItem>
-            <SelectItem value="expiring">Expiring Soon</SelectItem>
-            <SelectItem value="expired">Expired</SelectItem>
-          </SelectContent>
-        </Select>
+        <div className="flex flex-col sm:flex-row gap-3">
+          <Select value={category} onValueChange={(v) => v && setCategory(v)}>
+            <SelectTrigger className="w-full sm:w-44 h-11">
+              <SelectValue placeholder="Category" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Categories</SelectItem>
+              {PRODUCT_CATEGORIES.map((cat) => (
+                <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select value={status} onValueChange={(v) => v && setStatus(v as WarrantyStatus | 'all')}>
+            <SelectTrigger className="w-full sm:w-40 h-11">
+              <SelectValue placeholder="Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Status</SelectItem>
+              <SelectItem value="active">Active</SelectItem>
+              <SelectItem value="expiring">Expiring Soon</SelectItem>
+              <SelectItem value="expired">Expired</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       {filtered.length === 0 ? (
@@ -97,7 +99,7 @@ export default function Bills() {
           onAction={bills.length === 0 ? () => navigate('/bills/new') : undefined}
         />
       ) : (
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
           {filtered.map((bill) => (
             <BillCard key={bill.id} bill={bill} onClick={() => navigate(`/bills/${bill.id}`)} />
           ))}

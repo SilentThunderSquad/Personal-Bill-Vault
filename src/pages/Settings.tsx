@@ -274,11 +274,11 @@ export default function Settings() {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
-      className="max-w-2xl mx-auto space-y-6 pb-8"
+      className="max-w-2xl mx-auto space-y-4 sm:space-y-6 pb-8"
     >
       <div>
-        <h1 className="text-2xl font-bold text-foreground">Settings</h1>
-        <p className="text-muted-foreground mt-1">Manage your account and preferences</p>
+        <h1 className="text-xl sm:text-2xl font-bold text-foreground">Settings</h1>
+        <p className="text-sm sm:text-base text-muted-foreground mt-1">Manage your account and preferences</p>
       </div>
 
       {/* Profile Card */}
