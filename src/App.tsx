@@ -1,5 +1,6 @@
 import { Routes, Route } from 'react-router-dom';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
+import { PublicRoute } from '@/components/auth/PublicRoute';
 import { AppLayout } from '@/components/layout/AppLayout';
 import Landing from '@/pages/Landing';
 import Login from '@/pages/Login';
@@ -18,10 +19,14 @@ function App() {
     <Routes>
       {/* Public routes */}
       <Route path="/" element={<Landing />} />
-      <Route path="/login" element={<Login />} />
-      <Route path="/register" element={<Register />} />
-      <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/update-password" element={<UpdatePassword />} />
+
+      {/* Auth pages - redirect to dashboard if already logged in */}
+      <Route element={<PublicRoute />}>
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+      </Route>
 
       {/* Protected routes */}
       <Route element={<ProtectedRoute />}>

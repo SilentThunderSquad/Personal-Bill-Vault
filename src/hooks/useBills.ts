@@ -6,6 +6,28 @@ import type { Bill, BillFormData } from '@/types';
 
 const PAGE_SIZE = 20;
 
+/** Extract storage file path from a Supabase public URL */
+function getStoragePath(publicUrl: string, bucket: string): string | null {
+  try {
+    const marker = `/storage/v1/object/public/${bucket}/`;
+    const idx = publicUrl.indexOf(marker);
+    if (idx === -1) return null;
+    // Strip query params (cache busters like ?t=123)
+    const path = publicUrl.substring(idx + marker.length).split('?')[0];
+    return decodeURIComponent(path);
+  } catch {
+    return null;
+  }
+}
+
+/** Delete a file from Supabase storage (best-effort, won't throw) */
+async function deleteStorageFile(bucket: string, publicUrl: string | null | undefined) {
+  if (!publicUrl) return;
+  const path = getStoragePath(publicUrl, bucket);
+  if (!path) return;
+  await supabase.storage.from(bucket).remove([path]);
+}
+
 export function useBills() {
   const { user } = useAuth();
   const [bills, setBills] = useState<Bill[]>([]);
@@ -68,6 +90,12 @@ export function useBills() {
   const createBill = async (formData: BillFormData, imageFile?: File) => {
     if (!user) throw new Error('Not authenticated');
 
+    // Refresh session to ensure valid JWT for RLS
+    const { data: sessionData } = await supabase.auth.getSession();
+    if (!sessionData.session) {
+      throw new Error('Session expired. Please sign in again.');
+    }
+
     let bill_image_url: string | null = null;
 
     if (imageFile) {
@@ -77,7 +105,9 @@ export function useBills() {
       const { error: uploadError } = await supabase.storage
         .from('bill-images')
         .upload(filePath, imageFile);
-      if (uploadError) throw uploadError;
+      if (uploadError) {
+        throw new Error(`Image upload failed: ${uploadError.message}`);
+      }
 
       const { data: urlData } = supabase.storage
         .from('bill-images')
@@ -134,17 +164,30 @@ export function useBills() {
 
     // Handle new image upload
     if (newImageFile) {
+      // Get old image URL to clean up after successful upload
+      const { data: existingBill } = await supabase
+        .from('bills')
+        .select('bill_image_url')
+        .eq('id', id)
+        .eq('user_id', user.id)
+        .single();
+
       const sanitizedName = newImageFile.name.replace(/[^a-zA-Z0-9.-]/g, '_');
       const filePath = `${user.id}/${Date.now()}_${sanitizedName}`;
       const { error: uploadError } = await supabase.storage
         .from('bill-images')
         .upload(filePath, newImageFile);
-      if (uploadError) throw uploadError;
+      if (uploadError) {
+        throw new Error(`Image upload failed: ${uploadError.message}`);
+      }
 
       const { data: urlData } = supabase.storage
         .from('bill-images')
         .getPublicUrl(filePath);
       update.bill_image_url = urlData.publicUrl;
+
+      // Delete old image from storage (best-effort)
+      await deleteStorageFile('bill-images', existingBill?.bill_image_url);
     }
 
     const { data, error: updateError } = await supabase
@@ -164,13 +207,27 @@ export function useBills() {
 
   const deleteBill = async (billId: string) => {
     if (!user) throw new Error('Not authenticated');
+
+    // Fetch the bill first to get the image URL for cleanup
+    const { data: bill } = await supabase
+      .from('bills')
+      .select('bill_image_url')
+      .eq('id', billId)
+      .eq('user_id', user.id)
+      .single();
+
+    // Hard-delete from database
     const { error: deleteError } = await supabase
       .from('bills')
-      .update({ deleted_at: new Date().toISOString() })
+      .delete()
       .eq('id', billId)
       .eq('user_id', user.id);
 
     if (deleteError) throw deleteError;
+
+    // Clean up associated image from storage (best-effort)
+    await deleteStorageFile('bill-images', bill?.bill_image_url);
+
     setBills((prev) => prev.filter((b) => b.id !== billId));
   };
 

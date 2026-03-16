@@ -62,7 +62,14 @@ export default function AddBill() {
       toast.success('Bill added successfully!');
       navigate('/bills');
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Failed to save bill');
+      const msg = err instanceof Error ? err.message : 'Failed to save bill';
+      if (msg.includes('Image upload failed')) {
+        toast.error('Image upload failed. Run the storage policies SQL (005) in Supabase SQL Editor.');
+      } else if (msg.includes('Session expired')) {
+        toast.error('Session expired. Please sign in again.');
+      } else {
+        toast.error(msg);
+      }
     } finally {
       setSaving(false);
     }

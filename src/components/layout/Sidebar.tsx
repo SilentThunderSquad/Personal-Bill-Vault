@@ -1,7 +1,7 @@
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
-import { Shield, LayoutDashboard, Receipt, PlusCircle, Settings, X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Shield, LayoutDashboard, Receipt, PlusCircle, Settings, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 const navItems = [
@@ -60,16 +60,11 @@ function SidebarContent({ onClose, collapsed, onToggleCollapse }: { onClose?: ()
 
   return (
     <div className="flex flex-col h-full bg-card border-r border-border">
-      <div className={cn("flex items-center justify-between p-4", collapsed ? "px-2" : "p-6")}>
+      <div className={cn("flex items-center p-4", collapsed ? "justify-center px-2" : "p-6")}>
         <Link to="/dashboard" className="flex items-center gap-2" onClick={onClose}>
           <Shield className={cn("text-accent transition-all", collapsed ? "h-8 w-8" : "h-7 w-7")} />
           {!collapsed && <span className="text-xl font-bold text-foreground">Bill Vault</span>}
         </Link>
-        {onClose && (
-          <button onClick={onClose} className="lg:hidden text-muted-foreground hover:text-foreground">
-            <X className="h-5 w-5" />
-          </button>
-        )}
       </div>
       <nav className={cn("flex-1 space-y-1", collapsed ? "px-2" : "px-3")}>
         {navItems.map((item) => {

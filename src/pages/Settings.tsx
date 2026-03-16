@@ -179,14 +179,22 @@ export default function Settings() {
       const fileExt = file.name.split('.').pop();
       const filePath = `${user.id}/avatar.${fileExt}`;
 
-      // Upload to storage
+      // Delete old avatar files to prevent orphans (e.g. switching .png to .jpg)
+      const { data: existingFiles } = await supabase.storage
+        .from('avatars')
+        .list(user.id);
+      if (existingFiles && existingFiles.length > 0) {
+        const filesToDelete = existingFiles.map((f) => `${user.id}/${f.name}`);
+        await supabase.storage.from('avatars').remove(filesToDelete);
+      }
+
+      // Upload new avatar
       const { error: uploadError } = await supabase.storage
         .from('avatars')
         .upload(filePath, file, { upsert: true });
 
       if (uploadError) {
         console.error('Upload error:', uploadError);
-        // Provide specific error message based on error type
         if (uploadError.message.includes('Bucket not found')) {
           toast.error('Storage not configured. Please create the "avatars" bucket in Supabase.');
         } else if (uploadError.message.includes('policy') || uploadError.message.includes('permission') || uploadError.message.includes('not authorized')) {
