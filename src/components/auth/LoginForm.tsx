@@ -5,11 +5,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
-import { Shield, AlertTriangle } from 'lucide-react';
+import { Shield, AlertTriangle, Eye, EyeOff, ArrowLeft } from 'lucide-react';
 
 export function LoginForm() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const { signIn, isConfigured } = useAuth();
   const navigate = useNavigate();
@@ -44,6 +45,15 @@ export function LoginForm() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-background px-4 py-8">
       <div className="w-full max-w-md space-y-6 sm:space-y-8">
+        {/* Back to Home */}
+        <button
+          onClick={() => navigate('/')}
+          className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors group"
+        >
+          <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-0.5" />
+          Back to Home
+        </button>
+
         <div className="text-center">
           <Link to="/" className="inline-flex items-center gap-2 mb-4 sm:mb-6">
             <Shield className="h-7 w-7 sm:h-8 sm:w-8 text-accent" />
@@ -73,7 +83,25 @@ export function LoginForm() {
               <Label htmlFor="password">Password</Label>
               <Link to="/forgot-password" className="text-xs sm:text-sm text-accent hover:underline">Forgot password?</Link>
             </div>
-            <Input id="password" type="password" placeholder="Enter your password" value={password} onChange={(e) => setPassword(e.target.value)} required className="h-11" />
+            <div className="relative">
+              <Input
+                id="password"
+                type={showPassword ? 'text' : 'password'}
+                placeholder="Enter your password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                className="h-11 pr-10"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
+              >
+                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            </div>
           </div>
           <Button type="submit" className="w-full bg-accent hover:bg-accent/90 h-11 text-base" disabled={loading || !isConfigured}>
             {loading ? 'Signing in...' : 'Sign In'}

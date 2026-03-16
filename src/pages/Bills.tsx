@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { PRODUCT_CATEGORIES } from '@/utils/constants';
 import { getWarrantyStatus } from '@/utils/formatters';
 import { PlusCircle, Search, Receipt } from 'lucide-react';
+import { motion } from 'framer-motion';
 import type { WarrantyStatus } from '@/types';
 
 export default function Bills() {
@@ -42,7 +43,12 @@ export default function Bills() {
   }
 
   return (
-    <div className="space-y-4 sm:space-y-6">
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+      className="space-y-4 sm:space-y-6"
+    >
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-xl sm:text-2xl font-bold text-foreground">My Bills</h1>
@@ -100,11 +106,18 @@ export default function Bills() {
         />
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-          {filtered.map((bill) => (
-            <BillCard key={bill.id} bill={bill} onClick={() => navigate(`/bills/${bill.id}`)} />
+          {filtered.map((bill, index) => (
+            <motion.div
+              key={bill.id}
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3, delay: index * 0.05 }}
+            >
+              <BillCard bill={bill} onClick={() => navigate(`/bills/${bill.id}`)} />
+            </motion.div>
           ))}
         </div>
       )}
-    </div>
+    </motion.div>
   );
 }

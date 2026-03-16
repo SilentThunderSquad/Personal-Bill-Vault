@@ -14,7 +14,7 @@ export function BillCard({ bill, onClick }: BillCardProps) {
 
   return (
     <Card
-      className="cursor-pointer hover:border-accent/30 transition-all duration-200 hover:shadow-lg hover:shadow-accent/5"
+      className="cursor-pointer hover:border-accent/30 transition-all duration-200 hover:shadow-lg hover:shadow-accent/5 hover:-translate-y-0.5"
       onClick={onClick}
     >
       <CardContent className="p-4 sm:p-5">

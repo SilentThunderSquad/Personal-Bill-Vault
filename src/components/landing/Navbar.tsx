@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -10,6 +10,17 @@ export function Navbar() {
   const { user, loading } = useAuth();
   const isSignedIn = !loading && !!user;
 
+  const scrollToSection = useCallback((e: React.MouseEvent<HTMLAnchorElement>, id: string) => {
+    e.preventDefault();
+    const el = document.getElementById(id);
+    if (el) {
+      const headerOffset = 80;
+      const elementPosition = el.getBoundingClientRect().top + window.scrollY;
+      window.scrollTo({ top: elementPosition - headerOffset, behavior: 'smooth' });
+    }
+    setOpen(false);
+  }, []);
+
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-md border-b border-border">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-14 sm:h-16 flex items-center justify-between">
@@ -20,8 +31,20 @@ export function Navbar() {
 
         {/* Desktop Navigation */}
         <div className="hidden md:flex items-center gap-6">
-          <a href="#features" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Features</a>
-          <a href="#how-it-works" className="text-sm text-muted-foreground hover:text-foreground transition-colors">How It Works</a>
+          <a
+            href="#features"
+            onClick={(e) => scrollToSection(e, 'features')}
+            className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+          >
+            Features
+          </a>
+          <a
+            href="#how-it-works"
+            onClick={(e) => scrollToSection(e, 'how-it-works')}
+            className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+          >
+            How It Works
+          </a>
 
           {isSignedIn ? (
             <Link to="/dashboard">
@@ -65,7 +88,7 @@ export function Navbar() {
               <div className="space-y-1">
                 <a
                   href="#features"
-                  onClick={() => setOpen(false)}
+                  onClick={(e) => scrollToSection(e, 'features')}
                   className="flex items-center gap-3 px-3 py-3 text-foreground hover:bg-muted rounded-lg transition-colors"
                 >
                   <Sparkles className="h-5 w-5 text-muted-foreground" />
@@ -73,7 +96,7 @@ export function Navbar() {
                 </a>
                 <a
                   href="#how-it-works"
-                  onClick={() => setOpen(false)}
+                  onClick={(e) => scrollToSection(e, 'how-it-works')}
                   className="flex items-center gap-3 px-3 py-3 text-foreground hover:bg-muted rounded-lg transition-colors"
                 >
                   <Settings2 className="h-5 w-5 text-muted-foreground" />

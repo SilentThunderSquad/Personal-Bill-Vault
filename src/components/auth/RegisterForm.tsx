@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
-import { Shield, AlertTriangle, Eye, EyeOff, Check, X } from 'lucide-react';
+import { Shield, AlertTriangle, Eye, EyeOff, Check, X, ArrowLeft } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { validatePasswordStrength, isValidEmail, sanitizePhoneNumber, isCommonPassword } from '@/utils/security';
 
@@ -141,6 +141,15 @@ export function RegisterForm() {
         transition={{ duration: 0.4 }}
         className="w-full max-w-md space-y-6"
       >
+        {/* Back to Home */}
+        <button
+          onClick={() => navigate('/')}
+          className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors group"
+        >
+          <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-0.5" />
+          Back to Home
+        </button>
+
         <div className="text-center">
           <Link to="/" className="inline-flex items-center gap-2 mb-4 sm:mb-6">
             <Shield className="h-7 w-7 sm:h-8 sm:w-8 text-accent" />

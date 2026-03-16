@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useBills } from '@/hooks/useBills';
 import { useOCR } from '@/hooks/useOCR';
@@ -7,7 +7,7 @@ import { OCRPreview } from '@/components/bills/OCRPreview';
 import { BillForm } from '@/components/bills/BillForm';
 import { Card, CardContent } from '@/components/ui/card';
 import { toast } from 'sonner';
-import { Camera, Upload, FileText, Sparkles, ArrowLeft } from 'lucide-react';
+import { Camera, Upload, FileText, Sparkles, ArrowLeft, ImagePlus, X, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { BillFormData } from '@/types';
@@ -25,18 +25,40 @@ export default function AddBill() {
   const { createBill } = useBills();
   const { processing, progress, result, error: ocrError, processImage, reset } = useOCR();
   const [imageFile, setImageFile] = useState<File | null>(null);
+  const [manualImageFile, setManualImageFile] = useState<File | null>(null);
+  const [manualImagePreview, setManualImagePreview] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [activeTab, setActiveTab] = useState<TabType>('upload');
+  const manualFileInputRef = useRef<HTMLInputElement>(null);
 
   const handleImageSelect = async (file: File) => {
     setImageFile(file);
     await processImage(file);
   };
 
+  // Handle manual image upload without OCR
+  const handleManualImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file && file.type.startsWith('image/')) {
+      setManualImageFile(file);
+      const reader = new FileReader();
+      reader.onload = (ev) => setManualImagePreview(ev.target?.result as string);
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const clearManualImage = () => {
+    setManualImageFile(null);
+    setManualImagePreview(null);
+    if (manualFileInputRef.current) manualFileInputRef.current.value = '';
+  };
+
   const handleSave = async (formData: BillFormData) => {
     setSaving(true);
     try {
-      await createBill(formData, imageFile || undefined);
+      // Use appropriate image based on active tab
+      const imageToUpload = activeTab === 'manual' ? manualImageFile : imageFile;
+      await createBill(formData, imageToUpload || undefined);
       toast.success('Bill added successfully!');
       navigate('/bills');
     } catch (err) {
@@ -58,7 +80,12 @@ export default function AddBill() {
     : {};
 
   return (
-    <div className="max-w-3xl mx-auto space-y-5 sm:space-y-6">
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+      className="max-w-3xl mx-auto space-y-5 sm:space-y-6"
+    >
       {/* Header */}
       <div className="flex items-start justify-between gap-4">
         <div>
@@ -178,12 +205,56 @@ export default function AddBill() {
                 transition={{ duration: 0.2 }}
                 className="space-y-4 sm:space-y-6"
               >
+                {/* Optional Bill Image Upload (No OCR) */}
+                <div className="bg-muted/30 rounded-xl p-4 sm:p-5">
+                  <div className="flex items-center gap-2 pb-3 border-b border-border mb-4">
+                    <div className="p-1.5 rounded-md bg-accent/10">
+                      <ImagePlus className="h-4 w-4 text-accent" />
+                    </div>
+                    <h3 className="text-sm font-medium text-foreground">Bill Image <span className="text-muted-foreground font-normal">(Optional)</span></h3>
+                  </div>
+
+                  <input
+                    ref={manualFileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleManualImageSelect}
+                    className="hidden"
+                  />
+
+                  {manualImagePreview ? (
+                    <div className="relative rounded-lg border-2 border-accent/30 overflow-hidden bg-muted/20">
+                      <div className="p-3 bg-accent/5 border-b border-accent/20 flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <CheckCircle2 className="h-4 w-4 text-accent" />
+                          <span className="text-sm font-medium text-foreground">Image attached</span>
+                        </div>
+                        <Button variant="ghost" size="sm" onClick={clearManualImage} className="h-7 px-2 text-muted-foreground hover:text-destructive">
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                      <div className="p-3 flex justify-center">
+                        <img src={manualImagePreview} alt="Bill preview" className="max-h-40 object-contain rounded" />
+                      </div>
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => manualFileInputRef.current?.click()}
+                      className="w-full border-2 border-dashed border-muted-foreground/25 rounded-lg p-6 text-center hover:border-accent/50 hover:bg-muted/20 transition-all"
+                    >
+                      <ImagePlus className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
+                      <p className="text-sm text-muted-foreground">Click to attach bill image</p>
+                      <p className="text-xs text-muted-foreground mt-1">JPG, PNG, WebP supported</p>
+                    </button>
+                  )}
+                </div>
+
                 <BillForm onSubmit={handleSave} loading={saving} onCancel={() => navigate(-1)} />
               </motion.div>
             )}
           </AnimatePresence>
         </CardContent>
       </Card>
-    </div>
-  );
+    </motion.div>  );
 }
