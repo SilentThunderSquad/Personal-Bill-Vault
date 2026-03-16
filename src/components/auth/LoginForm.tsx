@@ -4,8 +4,10 @@ import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { SocialLoginButtons } from './SocialLoginButtons';
 import { toast } from 'sonner';
 import { Shield, AlertTriangle, Eye, EyeOff, ArrowLeft } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 export function LoginForm() {
   const [email, setEmail] = useState('');
@@ -44,7 +46,12 @@ export function LoginForm() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background px-4 py-8">
-      <div className="w-full max-w-md space-y-6 sm:space-y-8">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
+        className="w-full max-w-md space-y-6 sm:space-y-8"
+      >
         {/* Back to Home */}
         <button
           onClick={() => navigate('/')}
@@ -73,46 +80,50 @@ export function LoginForm() {
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-4 bg-card p-5 sm:p-8 rounded-xl border border-border">
-          <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input id="email" type="email" placeholder="you@example.com" value={email} onChange={(e) => setEmail(e.target.value)} required className="h-11" />
-          </div>
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <Label htmlFor="password">Password</Label>
-              <Link to="/forgot-password" className="text-xs sm:text-sm text-accent hover:underline">Forgot password?</Link>
+        <div className="bg-card p-5 sm:p-8 rounded-xl border border-border shadow-lg space-y-5">
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input id="email" type="email" placeholder="you@example.com" value={email} onChange={(e) => setEmail(e.target.value)} required className="h-11" />
             </div>
-            <div className="relative">
-              <Input
-                id="password"
-                type={showPassword ? 'text' : 'password'}
-                placeholder="Enter your password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                className="h-11 pr-10"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                aria-label={showPassword ? 'Hide password' : 'Show password'}
-              >
-                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-              </button>
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="password">Password</Label>
+                <Link to="/forgot-password" className="text-xs sm:text-sm text-accent hover:underline">Forgot password?</Link>
+              </div>
+              <div className="relative">
+                <Input
+                  id="password"
+                  type={showPassword ? 'text' : 'password'}
+                  placeholder="Enter your password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  className="h-11 pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
             </div>
-          </div>
-          <Button type="submit" className="w-full bg-accent hover:bg-accent/90 h-11 text-base" disabled={loading || !isConfigured}>
-            {loading ? 'Signing in...' : 'Sign In'}
-          </Button>
-        </form>
+            <Button type="submit" className="w-full bg-accent hover:bg-accent/90 h-11 text-base" disabled={loading || !isConfigured}>
+              {loading ? 'Signing in...' : 'Sign In'}
+            </Button>
+          </form>
+
+          <SocialLoginButtons disabled={loading} />
+        </div>
 
         <p className="text-center text-sm text-muted-foreground">
           Don&apos;t have an account?{' '}
           <Link to="/register" className="text-accent hover:underline font-medium">Sign up</Link>
         </p>
-      </div>
+      </motion.div>
     </div>
   );
 }

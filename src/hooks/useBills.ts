@@ -49,7 +49,6 @@ export function useBills() {
       .from('bills')
       .select('*', { count: 'exact' })
       .eq('user_id', user.id)
-      .is('deleted_at', null)
       .order('created_at', { ascending: false })
       .range(from, to);
 

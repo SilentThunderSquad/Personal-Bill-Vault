@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { Shield, AlertTriangle, Eye, EyeOff, Check, X, ArrowLeft } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { SocialLoginButtons } from './SocialLoginButtons';
 import { validatePasswordStrength, isValidEmail, sanitizePhoneNumber, isCommonPassword } from '@/utils/security';
 
 const COUNTRIES = [
@@ -348,6 +349,8 @@ export function RegisterForm() {
           >
             {loading ? 'Creating account...' : 'Create Account'}
           </Button>
+
+          <SocialLoginButtons disabled={loading} />
 
           <p className="text-xs text-center text-muted-foreground">
             By creating an account, you agree to our{' '}
