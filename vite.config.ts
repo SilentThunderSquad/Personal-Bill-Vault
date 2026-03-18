@@ -9,9 +9,10 @@ export default defineConfig({
     react(),
     tailwindcss(),
     VitePWA({
-      registerType: 'autoUpdate',
-      includeAssets: ['favicon.svg', 'icons/*.svg', 'icons/*.png'],
+      registerType: 'prompt',
+      includeAssets: ['favicon.svg', 'icons/*.svg', 'icons/*.png', 'robots.txt'],
       manifest: {
+        id: '/',
         name: 'Bill Vault',
         short_name: 'Bill Vault',
         description: 'Store bills securely, track product warranties, and get alerts before they expire.',
@@ -23,23 +24,25 @@ export default defineConfig({
         start_url: '/',
         icons: [
           {
-            src: '/icons/icon.svg',
-            sizes: 'any',
-            type: 'image/svg+xml',
+            src: '/icons/icon-192x192.png',
+            sizes: '192x192',
+            type: 'image/png',
             purpose: 'any'
           },
           {
-            src: '/icons/icon-192.png',
-            sizes: '192x192',
-            type: 'image/png'
-          },
-          {
-            src: '/icons/icon-512.png',
+            src: '/icons/icon-512x512.png',
             sizes: '512x512',
-            type: 'image/png'
+            type: 'image/png',
+            purpose: 'any'
           },
           {
-            src: '/icons/icon-512-maskable.png',
+            src: '/icons/icon-maskable-192x192.png',
+            sizes: '192x192',
+            type: 'image/png',
+            purpose: 'maskable'
+          },
+          {
+            src: '/icons/icon-maskable-512x512.png',
             sizes: '512x512',
             type: 'image/png',
             purpose: 'maskable'
@@ -51,20 +54,28 @@ export default defineConfig({
             name: 'Add Bill',
             short_name: 'Add',
             description: 'Add a new bill',
-            url: '/bills/new'
+            url: '/bills/new',
+            icons: [{ src: '/icons/icon-192x192.png', sizes: '192x192' }]
           },
           {
             name: 'My Bills',
             short_name: 'Bills',
             description: 'View all bills',
-            url: '/bills'
+            url: '/bills',
+            icons: [{ src: '/icons/icon-192x192.png', sizes: '192x192' }]
           }
         ]
       },
       workbox: {
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff,woff2}'],
+        navigateFallback: '/index.html',
+        navigateFallbackDenylist: [/^\/api/, /^\/(auth|callback)/, /\.(js|css|png|jpg|svg|ico)$/],
+        // Skip waiting and claim clients immediately for faster updates
+        skipWaiting: true,
+        clientsClaim: true,
         runtimeCaching: [
           {
+            // Google Fonts stylesheets
             urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
             handler: 'CacheFirst',
             options: {
@@ -79,6 +90,7 @@ export default defineConfig({
             }
           },
           {
+            // Google Fonts files
             urlPattern: /^https:\/\/fonts\.gstatic\.com\/.*/i,
             handler: 'CacheFirst',
             options: {
@@ -91,8 +103,46 @@ export default defineConfig({
                 statuses: [0, 200]
               }
             }
+          },
+          {
+            // Supabase storage (images/files) - cache first for performance
+            urlPattern: /^https:\/\/.*\.supabase\.co\/storage\/.*/i,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'supabase-storage-cache',
+              expiration: {
+                maxEntries: 100,
+                maxAgeSeconds: 60 * 60 * 24 * 30 // 30 days
+              },
+              cacheableResponse: {
+                statuses: [200] // Only cache successful responses, not opaque
+              }
+            }
+          },
+          {
+            // Supabase API - network first with fallback
+            // IMPORTANT: Only cache 200 responses to avoid caching auth errors
+            urlPattern: /^https:\/\/.*\.supabase\.co\/rest\/v1\/.*/i,
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'supabase-api-cache',
+              networkTimeoutSeconds: 10,
+              expiration: {
+                maxEntries: 50,
+                maxAgeSeconds: 60 * 60 // 1 hour (short for API data)
+              },
+              cacheableResponse: {
+                statuses: [200] // Only cache successful responses
+              }
+            }
+          },
+          {
+            // Supabase Auth - never cache
+            urlPattern: /^https:\/\/.*\.supabase\.co\/auth\/.*/i,
+            handler: 'NetworkOnly'
           }
-        ]
+        ],
+        cleanupOutdatedCaches: true
       },
       devOptions: {
         enabled: true
