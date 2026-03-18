@@ -12,6 +12,7 @@ import Bills from '@/pages/Bills';
 import AddBill from '@/pages/AddBill';
 import BillDetailPage from '@/pages/BillDetail';
 import Settings from '@/pages/Settings';
+import Notifications from '@/pages/Notifications';
 import NotFound from '@/pages/NotFound';
 
 function App() {
@@ -36,6 +37,7 @@ function App() {
           <Route path="/bills/new" element={<AddBill />} />
           <Route path="/bills/:id" element={<BillDetailPage />} />
           <Route path="/settings" element={<Settings />} />
+          <Route path="/notifications" element={<Notifications />} />
         </Route>
       </Route>
 
