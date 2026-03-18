@@ -4,6 +4,7 @@ import { BrowserRouter } from 'react-router-dom';
 import { Toaster } from '@/components/ui/sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { AuthProvider } from '@/context/AuthContext';
+import { PWAPrompt } from '@/components/common/PWAPrompt';
 import App from './App';
 import './index.css';
 
@@ -14,6 +15,7 @@ createRoot(document.getElementById('root')!).render(
         <TooltipProvider>
           <App />
           <Toaster richColors position="top-right" />
+          <PWAPrompt />
         </TooltipProvider>
       </AuthProvider>
     </BrowserRouter>

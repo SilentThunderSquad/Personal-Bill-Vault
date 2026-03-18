@@ -1,46 +1,55 @@
+import { Suspense, lazy } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { PublicRoute } from '@/components/auth/PublicRoute';
 import { AppLayout } from '@/components/layout/AppLayout';
-import Landing from '@/pages/Landing';
-import Login from '@/pages/Login';
-import Register from '@/pages/Register';
-import ForgotPassword from '@/pages/ForgotPassword';
-import UpdatePassword from '@/pages/UpdatePassword';
-import Dashboard from '@/pages/Dashboard';
-import Bills from '@/pages/Bills';
-import AddBill from '@/pages/AddBill';
-import BillDetailPage from '@/pages/BillDetail';
-import Settings from '@/pages/Settings';
-import NotFound from '@/pages/NotFound';
+import { LoadingSpinner } from './components/common/LoadingSpinner';
+
+const Landing = lazy(() => import('@/pages/Landing'));
+const Login = lazy(() => import('@/pages/Login'));
+const Register = lazy(() => import('@/pages/Register'));
+const ForgotPassword = lazy(() => import('@/pages/ForgotPassword'));
+const UpdatePassword = lazy(() => import('@/pages/UpdatePassword'));
+const Dashboard = lazy(() => import('@/pages/Dashboard'));
+const Bills = lazy(() => import('@/pages/Bills'));
+const AddBill = lazy(() => import('@/pages/AddBill'));
+const BillDetailPage = lazy(() => import('@/pages/BillDetail'));
+const Settings = lazy(() => import('@/pages/Settings'));
+const Notifications = lazy(() => import('@/pages/Notifications'));
+const NotFound = lazy(() => import('@/pages/NotFound'));
 
 function App() {
   return (
-    <Routes>
-      {/* Public routes */}
-      <Route path="/" element={<Landing />} />
-      <Route path="/update-password" element={<UpdatePassword />} />
+    <>
+      <Suspense fallback={<LoadingSpinner fullScreen />}>
+        <Routes>
+          {/* Public routes */}
+          <Route path="/" element={<Landing />} />
+          <Route path="/update-password" element={<UpdatePassword />} />
 
-      {/* Auth pages - redirect to dashboard if already logged in */}
-      <Route element={<PublicRoute />}>
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="/forgot-password" element={<ForgotPassword />} />
-      </Route>
+          {/* Auth pages - redirect to dashboard if already logged in */}
+          <Route element={<PublicRoute />}>
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+          </Route>
 
-      {/* Protected routes */}
-      <Route element={<ProtectedRoute />}>
-        <Route element={<AppLayout />}>
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/bills" element={<Bills />} />
-          <Route path="/bills/new" element={<AddBill />} />
-          <Route path="/bills/:id" element={<BillDetailPage />} />
-          <Route path="/settings" element={<Settings />} />
-        </Route>
-      </Route>
+          {/* Protected routes */}
+          <Route element={<ProtectedRoute />}>
+            <Route element={<AppLayout />}>
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/bills" element={<Bills />} />
+              <Route path="/bills/new" element={<AddBill />} />
+              <Route path="/bills/:id" element={<BillDetailPage />} />
+              <Route path="/settings" element={<Settings />} />
+              <Route path="/notifications" element={<Notifications />} />
+            </Route>
+          </Route>
 
-      <Route path="*" element={<NotFound />} />
-    </Routes>
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </Suspense>
+    </>
   );
 }
 

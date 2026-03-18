@@ -9,6 +9,7 @@ import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
 import { Bell, User, Shield, Camera, Lock, Save, Loader2 } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { cn } from '@/lib/utils';
 import type { NotificationSettings, UserProfile } from '@/types';
 import { sanitizePhoneNumber } from '@/utils/security';
 
@@ -561,26 +562,31 @@ function ToggleRow({
   const id = label.toLowerCase().replace(/\s+/g, '-');
 
   return (
-    <div className="flex items-center justify-between">
-      <div>
-        <label htmlFor={id} className="text-sm font-medium text-foreground cursor-pointer">{label}</label>
-        <p className="text-xs text-muted-foreground">{description}</p>
+    <div className="flex items-center justify-between gap-4 py-1">
+      <div className="flex-1 min-w-0">
+        <label htmlFor={id} className="text-sm font-medium text-foreground cursor-pointer block">{label}</label>
+        <p className="text-xs text-muted-foreground mt-0.5">{description}</p>
       </div>
       <button
         id={id}
+        type="button"
         role="switch"
         aria-checked={checked}
         aria-label={label}
         onClick={() => onChange(!checked)}
         disabled={disabled}
-        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 ${
-          checked ? 'bg-accent' : 'bg-muted'
-        } ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+        className={cn(
+          "relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors",
+          "focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+          checked ? 'bg-accent' : 'bg-muted',
+          disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+        )}
       >
         <span
-          className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition-transform ${
+          className={cn(
+            "inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition-transform",
             checked ? 'translate-x-6' : 'translate-x-1'
-          }`}
+          )}
         />
       </button>
     </div>
