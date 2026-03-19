@@ -20,7 +20,7 @@ export function CategoryDistributionChart({ bills }: CategoryDistributionChartPr
 
   const topCategory = chartData[0];
 
-  const CustomTooltip = ({ active, payload }: any) => {
+  const CustomTooltip = ({ active, payload }: { active?: boolean; payload?: any[] }) => {
     if (active && payload && payload.length) {
       const data = payload[0].payload;
       return (
@@ -35,7 +35,7 @@ export function CategoryDistributionChart({ bills }: CategoryDistributionChartPr
     return null;
   };
 
-  const CustomLegend = ({ payload }: any) => {
+  const CustomLegend = ({ payload }: { payload?: Array<{ value: string; color: string }> }) => {
     return (
       <div className="grid grid-cols-1 gap-2 mt-4">
         {payload?.map((entry: any, index: number) => (
