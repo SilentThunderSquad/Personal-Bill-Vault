@@ -1,0 +1,56 @@
+# Development files
+.env.local
+.env.development
+.env.test
+
+# Build artifacts
+/node_modules
+/dist
+/.vite
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Git files
+.git/
+.gitignore
+
+# Documentation
+README.md
+docs/
+
+# Test files
+tests/
+test/
+*.test.*
+*.spec.*
+
+# Development tools
+.eslintrc*
+*.config.js
+*.config.ts
+!vite.config.ts
+!tsconfig*.json
+
+# Memory files
+memory/
+
+# Scripts
+scripts/
+
+# Supabase local files
+supabase/.temp/
+supabase/logs/
+
+# Lock files (already handled in vercel.json)
+package-lock.json
+yarn.lock
+pnpm-lock.yaml

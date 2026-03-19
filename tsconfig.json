@@ -4,10 +4,13 @@
     "paths": {
       "@/*": ["./src/*"]
     },
+    "module": "ESNext",
     "moduleResolution": "bundler",
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "lib": ["ES2023", "DOM"],
+    "types": ["node"]
   },
   "files": [],
   "references": [

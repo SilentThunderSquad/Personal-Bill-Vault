@@ -19,6 +19,47 @@ declare module 'virtual:pwa-register/react' {
   };
 }
 
+// Vite environment variables
+interface ImportMetaEnv {
+  readonly VITE_SUPABASE_URL: string;
+  readonly VITE_SUPABASE_ANON_KEY: string;
+  readonly VITE_APP_VERSION: string;
+  readonly DEV: boolean;
+  readonly PROD: boolean;
+  readonly SSR: boolean;
+}
+
+interface ImportMeta {
+  readonly env: ImportMetaEnv;
+}
+
+// Vite types for better compatibility
+declare module 'vite' {
+  export function defineConfig(config: any): any;
+}
+
+declare module '@vitejs/plugin-react' {
+  function react(options?: any): any;
+  export default react;
+}
+
+declare module '@tailwindcss/vite' {
+  function tailwindcss(options?: any): any;
+  export default tailwindcss;
+}
+
+declare module 'vite-plugin-pwa' {
+  export interface VitePWAOptions {
+    registerType?: 'prompt' | 'autoUpdate' | 'skipWaiting';
+    includeAssets?: string[];
+    manifest?: any;
+    workbox?: any;
+    devOptions?: any;
+  }
+
+  export function VitePWA(options?: VitePWAOptions): any;
+}
+
 // Chart library type declarations for Vercel compatibility
 declare module 'recharts' {
   import type { ComponentProps, ReactElement } from 'react';
@@ -113,9 +154,64 @@ declare module 'tesseract.js' {
   ): Promise<RecognizeResult>;
 }
 
+// Node.js path module
+declare module 'path' {
+  export function resolve(...paths: string[]): string;
+  export function join(...paths: string[]): string;
+  export function dirname(path: string): string;
+  export function basename(path: string, ext?: string): string;
+  export function extname(path: string): string;
+  export const sep: string;
+}
+
 // Global type augmentations
 declare global {
   interface Window {
     // Add any global variables if needed
   }
+
+  const __dirname: string;
+  const __filename: string;
+}
+
+// CSS modules
+declare module '*.module.css' {
+  const classes: { [key: string]: string };
+  export default classes;
+}
+
+declare module '*.module.scss' {
+  const classes: { [key: string]: string };
+  export default classes;
+}
+
+// Asset imports
+declare module '*.svg' {
+  const content: any;
+  export default content;
+}
+
+declare module '*.png' {
+  const content: string;
+  export default content;
+}
+
+declare module '*.jpg' {
+  const content: string;
+  export default content;
+}
+
+declare module '*.jpeg' {
+  const content: string;
+  export default content;
+}
+
+declare module '*.gif' {
+  const content: string;
+  export default content;
+}
+
+declare module '*.webp' {
+  const content: string;
+  export default content;
 }
