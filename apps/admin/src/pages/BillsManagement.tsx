@@ -304,7 +304,7 @@ export function BillsManagement() {
 
   // Get unique categories for filter dropdown
   const categories = React.useMemo(() => {
-    const cats = bills.map(bill => bill.category).filter(Boolean);
+    const cats = bills.map(bill => bill.category).filter((cat): cat is string => Boolean(cat));
     return [...new Set(cats)];
   }, [bills]);
 
