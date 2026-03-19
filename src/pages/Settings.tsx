@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
-import { Bell, User, Shield, Camera, Lock, Save, Loader2 } from 'lucide-react';
+import { Bell, User, Shield, Camera, Lock, Save, Loader2, BarChart3 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import type { NotificationSettings, UserProfile } from '@/types';
@@ -23,6 +23,7 @@ const DEFAULT_SETTINGS: Omit<NotificationSettings, 'id' | 'user_id' | 'created_a
   notify_30_days: true,
   notify_7_days: true,
   notify_1_day: true,
+  analytics_enabled: true,
 };
 
 export default function Settings() {
@@ -264,7 +265,8 @@ export default function Settings() {
       .eq('user_id', user.id);
 
     if (error) {
-      toast.error('Failed to update settings');
+      console.error('Settings update error:', error);
+      toast.error(`Failed to update settings: ${error.message}`);
     } else {
       setSettings({ ...settings, [key]: value });
       toast.success('Settings updated');
@@ -514,6 +516,46 @@ export default function Settings() {
                 onChange={(v) => updateSetting('notify_1_day', v)}
                 disabled={saving}
               />
+            </>
+          ) : (
+            <p className="text-sm text-muted-foreground">No settings available</p>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Analytics Preferences Card */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <BarChart3 className="h-5 w-5 text-accent" />
+            <CardTitle>Analytics</CardTitle>
+          </div>
+          <CardDescription>Control dashboard charts and analytics features</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {loadingSettings ? (
+            <div className="flex justify-center py-4">
+              <Loader2 className="h-6 w-6 animate-spin text-accent" />
+            </div>
+          ) : settingsError ? (
+            <p className="text-sm text-destructive">{settingsError}</p>
+          ) : settings ? (
+            <>
+              <ToggleRow
+                label="Dashboard Analytics"
+                description="Show charts and analytics on your dashboard"
+                checked={settings.analytics_enabled}
+                onChange={(v) => updateSetting('analytics_enabled', v)}
+                disabled={saving}
+              />
+              <div className="text-xs text-muted-foreground bg-muted/30 rounded-lg p-3">
+                <p className="font-medium mb-1">What this includes:</p>
+                <ul className="space-y-0.5">
+                  <li>• Monthly bill upload trends</li>
+                  <li>• Category distribution charts</li>
+                  <li>• Visual insights and statistics</li>
+                </ul>
+              </div>
             </>
           ) : (
             <p className="text-sm text-muted-foreground">No settings available</p>

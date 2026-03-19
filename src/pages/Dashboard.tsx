@@ -1,12 +1,17 @@
 import { useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { useBills } from '@/hooks/useBills';
 import { useProfile } from '@/hooks/useProfile';
+import { useAnalyticsSettings } from '@/hooks/useAnalyticsSettings';
 import { StatsGrid } from '@/components/dashboard/StatsGrid';
 import { RecentBills } from '@/components/dashboard/RecentBills';
 import { QuickActions } from '@/components/dashboard/QuickActions';
 import { WarrantyTimeline } from '@/components/dashboard/WarrantyTimeline';
+import { MonthlyUploadsChart } from '@/components/dashboard/MonthlyUploadsChart';
+import { CategoryDistributionChart } from '@/components/dashboard/CategoryDistributionChart';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { getWarrantyStatus } from '@/utils/formatters';
+import { shouldShowAnalytics } from '@/utils/chartHelpers';
 import { motion } from 'framer-motion';
 import type { DashboardStats } from '@/types';
 
@@ -28,10 +33,23 @@ const itemVariants = {
 export default function Dashboard() {
   const { bills, loading, fetchBills } = useBills();
   const { profile } = useProfile();
+  const { analyticsEnabled, loading: analyticsLoading } = useAnalyticsSettings();
 
   useEffect(() => {
     fetchBills();
   }, [fetchBills]);
+
+  // Debug analytics conditions
+  useEffect(() => {
+    if (!loading && !analyticsLoading) {
+      console.log('Dashboard Analytics Debug:', {
+        billsCount: bills.length,
+        analyticsEnabled,
+        shouldShow: shouldShowAnalytics(bills.length),
+        willRender: analyticsEnabled && shouldShowAnalytics(bills.length)
+      });
+    }
+  }, [bills.length, analyticsEnabled, analyticsLoading, loading]);
 
   const stats: DashboardStats = {
     total: bills.length,
@@ -80,6 +98,38 @@ export default function Dashboard() {
       <motion.div variants={itemVariants}>
         <QuickActions />
       </motion.div>
+
+      {/* Analytics Section - Conditionally Rendered */}
+      {!analyticsLoading && analyticsEnabled && shouldShowAnalytics(bills.length) && (
+        <motion.div variants={itemVariants}>
+          <div className="grid gap-6 lg:gap-8 lg:grid-cols-2">
+            <MonthlyUploadsChart bills={bills} />
+            <CategoryDistributionChart bills={bills} />
+          </div>
+        </motion.div>
+      )}
+
+      {/* Analytics Info Message */}
+      {!analyticsLoading && analyticsEnabled && !shouldShowAnalytics(bills.length) && bills.length > 0 && (
+        <motion.div variants={itemVariants}>
+          <div className="bg-muted/30 border border-border rounded-lg p-4 text-center">
+            <p className="text-sm text-muted-foreground">
+              📊 Analytics will appear once you have at least 3 bills. You currently have {bills.length} bill{bills.length === 1 ? '' : 's'}.
+            </p>
+          </div>
+        </motion.div>
+      )}
+
+      {/* Analytics Disabled Message */}
+      {!analyticsLoading && !analyticsEnabled && bills.length >= 3 && (
+        <motion.div variants={itemVariants}>
+          <div className="bg-muted/30 border border-border rounded-lg p-4 text-center">
+            <p className="text-sm text-muted-foreground">
+              📊 Analytics are currently disabled. Enable them in <Link to="/settings" className="text-accent underline hover:text-accent/80">Settings</Link> to see charts and insights.
+            </p>
+          </div>
+        </motion.div>
+      )}
 
       <motion.div variants={itemVariants} className="grid gap-6 lg:gap-8 lg:grid-cols-2">
         <RecentBills bills={bills.slice(0, 5)} />

@@ -67,6 +67,7 @@ export interface NotificationSettings {
   notify_30_days: boolean;
   notify_7_days: boolean;
   notify_1_day: boolean;
+  analytics_enabled: boolean;
   created_at: string;
   updated_at: string;
 }
