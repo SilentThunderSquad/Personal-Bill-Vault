@@ -58,8 +58,8 @@ export async function extractTextFromPDF(
       const textContent = await page.getTextContent();
 
       const pageText = textContent.items
-        .map((item: any) => (item as any).str || '')
-        .filter((str: string) => str.length > 0)
+        .map((item: any): string => (item as any).str || '')
+        .filter((str: string): boolean => str.length > 0)
         .join(' ');
 
       fullText += pageText + '\n';
