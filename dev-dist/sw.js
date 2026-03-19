@@ -67,13 +67,10 @@ if (!self.define) {
     });
   };
 }
-define(['./workbox-a1974cce'], (function (workbox) { 'use strict';
+define(['./workbox-51749ddc'], (function (workbox) { 'use strict';
 
-  self.addEventListener('message', event => {
-    if (event.data && event.data.type === 'SKIP_WAITING') {
-      self.skipWaiting();
-    }
-  });
+  self.skipWaiting();
+  workbox.clientsClaim();
 
   /**
    * The precacheAndRoute() method efficiently caches and responds to
@@ -82,12 +79,12 @@ define(['./workbox-a1974cce'], (function (workbox) { 'use strict';
    */
   workbox.precacheAndRoute([{
     "url": "/index.html",
-    "revision": "0.8a05cmmtj68"
+    "revision": "0.86cimtpkkl4"
   }], {});
   workbox.cleanupOutdatedCaches();
   workbox.registerRoute(new workbox.NavigationRoute(workbox.createHandlerBoundToURL("/index.html"), {
     allowlist: [/^\/$/],
-    denylist: [/^\/api/, /^\/(auth|callback)/]
+    denylist: [/^\/api/, /^\/(auth|callback)/, /\.(js|css|png|jpg|svg|ico)$/]
   }));
   workbox.registerRoute(/^https:\/\/fonts\.googleapis\.com\/.*/i, new workbox.CacheFirst({
     "cacheName": "google-fonts-cache",
@@ -108,23 +105,24 @@ define(['./workbox-a1974cce'], (function (workbox) { 'use strict';
     })]
   }), 'GET');
   workbox.registerRoute(/^https:\/\/.*\.supabase\.co\/storage\/.*/i, new workbox.CacheFirst({
-    "cacheName": "supabase-images-cache",
+    "cacheName": "supabase-storage-cache",
     plugins: [new workbox.ExpirationPlugin({
       maxEntries: 100,
       maxAgeSeconds: 2592000
     }), new workbox.CacheableResponsePlugin({
-      statuses: [0, 200]
+      statuses: [200]
     })]
   }), 'GET');
   workbox.registerRoute(/^https:\/\/.*\.supabase\.co\/rest\/v1\/.*/i, new workbox.NetworkFirst({
     "cacheName": "supabase-api-cache",
-    "networkTimeoutSeconds": 5,
+    "networkTimeoutSeconds": 10,
     plugins: [new workbox.ExpirationPlugin({
       maxEntries: 50,
-      maxAgeSeconds: 86400
+      maxAgeSeconds: 3600
     }), new workbox.CacheableResponsePlugin({
-      statuses: [0, 200]
+      statuses: [200]
     })]
   }), 'GET');
+  workbox.registerRoute(/^https:\/\/.*\.supabase\.co\/auth\/.*/i, new workbox.NetworkOnly(), 'GET');
 
 }));

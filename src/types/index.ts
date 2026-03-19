@@ -3,13 +3,15 @@ export interface Bill {
   user_id: string;
   product_name: string;
   brand: string | null;
+  vendor_name: string | null;
+  bill_number: string | null;
   purchase_date: string;
   warranty_period_months: number;
   warranty_expiry: string;
   invoice_number: string | null;
   store_name: string;
   category: string;
-  bill_image_url: string | null;
+  bill_file_url: string | null;
   price: number;
   currency: string;
   notes: string | null;
@@ -20,6 +22,8 @@ export interface Bill {
 export interface BillFormData {
   product_name: string;
   brand: string;
+  vendor_name: string;
+  bill_number: string;
   purchase_date: string;
   warranty_period_months: string;
   warranty_expiry: string;
@@ -34,9 +38,11 @@ export interface BillFormData {
 export interface OcrResult {
   product_name?: string;
   store_name?: string;
+  vendor_name?: string;
   purchase_date?: string;
   amount?: string;
   invoice_number?: string;
+  bill_number?: string;
   raw_text: string;
   confidence: number;
 }

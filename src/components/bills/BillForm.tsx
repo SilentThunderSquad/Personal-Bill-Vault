@@ -22,6 +22,8 @@ interface BillFormProps {
 const emptyForm: BillFormData = {
   product_name: '',
   brand: '',
+  vendor_name: '',
+  bill_number: '',
   purchase_date: '',
   warranty_period_months: '12',
   warranty_expiry: '',
@@ -170,12 +172,32 @@ export function BillForm({
             )}
           </div>
           <div className="space-y-2">
+            <Label htmlFor="vendor_name" className="text-sm">Vendor Name</Label>
+            <Input
+              id="vendor_name"
+              value={form.vendor_name}
+              onChange={(e) => handleChange('vendor_name', e.target.value)}
+              placeholder="e.g. Apple Inc, Samsung"
+              className="h-11"
+            />
+          </div>
+          <div className="space-y-2">
             <Label htmlFor="invoice_number" className="text-sm">Invoice Number</Label>
             <Input
               id="invoice_number"
               value={form.invoice_number}
               onChange={(e) => handleChange('invoice_number', e.target.value)}
               placeholder="e.g. INV-2024-001"
+              className="h-11"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="bill_number" className="text-sm">Bill Number</Label>
+            <Input
+              id="bill_number"
+              value={form.bill_number}
+              onChange={(e) => handleChange('bill_number', e.target.value)}
+              placeholder="e.g. BIL-2024-001, TXN123456"
               className="h-11"
             />
           </div>

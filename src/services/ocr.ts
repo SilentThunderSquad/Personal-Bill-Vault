@@ -1,5 +1,18 @@
 import type { OcrResult } from '@/types';
 
+export async function extractTextFromFile(
+  file: File,
+  onProgress?: (progress: number) => void
+): Promise<OcrResult> {
+  if (file.type === 'application/pdf') {
+    return extractTextFromPDF(file, onProgress);
+  } else if (file.type.startsWith('image/')) {
+    return extractTextFromImage(file, onProgress);
+  } else {
+    throw new Error('Unsupported file type');
+  }
+}
+
 export async function extractTextFromImage(
   imageFile: File,
   onProgress?: (progress: number) => void
@@ -17,10 +30,78 @@ export async function extractTextFromImage(
   return parseOcrText(result.data.text, result.data.confidence);
 }
 
+export async function extractTextFromPDF(
+  pdfFile: File,
+  onProgress?: (progress: number) => void
+): Promise<OcrResult> {
+  const pdfjs = await import('pdfjs-dist');
+
+  // Set worker source
+  pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
+
+  try {
+    const arrayBuffer = await pdfFile.arrayBuffer();
+    const pdf = await pdfjs.getDocument(arrayBuffer).promise;
+
+    let fullText = '';
+    const totalPages = pdf.numPages;
+
+    // Limit to first 5 pages for performance
+    const pagesToProcess = Math.min(totalPages, 5);
+
+    for (let i = 1; i <= pagesToProcess; i++) {
+      if (onProgress) {
+        onProgress(Math.round((i / pagesToProcess) * 100));
+      }
+
+      const page = await pdf.getPage(i);
+      const textContent = await page.getTextContent();
+
+      const pageText = textContent.items
+        .filter((item): item is { str: string } => 'str' in item)
+        .map(item => item.str)
+        .join(' ');
+
+      fullText += pageText + '\n';
+    }
+
+    // Since PDF text extraction is digital, confidence is high
+    const confidence = 95;
+
+    return parseOcrText(fullText.trim(), confidence);
+  } catch (error) {
+    console.error('PDF text extraction error:', error);
+    throw new Error('Failed to extract text from PDF');
+  }
+}
+
 export function parseOcrText(rawText: string, confidence: number): OcrResult {
   const lines = rawText.split('\n').map((l) => l.trim()).filter(Boolean);
 
   const store_name = lines[0] || undefined;
+
+  // Vendor name extraction (look for vendor/company patterns)
+  let vendor_name: string | undefined;
+  const vendorPatterns = [
+    /(?:Vendor|Company|Supplier|From)[:\s]*(.+)/i,
+    /(?:Billed by|Sold by)[:\s]*(.+)/i,
+    /(?:Merchant|Retailer)[:\s]*(.+)/i,
+  ];
+  for (const line of lines) {
+    for (const pattern of vendorPatterns) {
+      const match = line.match(pattern);
+      if (match) {
+        vendor_name = match[1].trim();
+        break;
+      }
+    }
+    if (vendor_name) break;
+  }
+
+  // If no specific vendor pattern found, use store_name
+  if (!vendor_name && store_name) {
+    vendor_name = store_name;
+  }
 
   // Date extraction
   const datePatterns = [
@@ -76,7 +157,7 @@ export function parseOcrText(rawText: string, confidence: number): OcrResult {
 
   // Invoice number
   let invoice_number: string | undefined;
-  const invoicePatterns = [/(?:Invoice|Bill|Receipt|Ref)\s*(?:No|Number|#)?[.:\s]*([A-Z0-9\-]+)/i];
+  const invoicePatterns = [/(?:Invoice|Receipt|Ref)\s*(?:No|Number|#)?[.:\s]*([A-Z0-9\-]+)/i];
   for (const line of lines) {
     for (const pattern of invoicePatterns) {
       const match = line.match(pattern);
@@ -88,5 +169,33 @@ export function parseOcrText(rawText: string, confidence: number): OcrResult {
     if (invoice_number) break;
   }
 
-  return { store_name, purchase_date, product_name, amount, invoice_number, raw_text: rawText, confidence };
+  // Bill number (separate from invoice number)
+  let bill_number: string | undefined;
+  const billPatterns = [
+    /(?:Bill|Transaction|Order)\s*(?:No|Number|#)?[.:\s]*([A-Z0-9\-]+)/i,
+    /(?:TXN|TRN|ORD)\s*(?:No|Number|#)?[.:\s]*([A-Z0-9\-]+)/i,
+    /#\s*([A-Z0-9\-]{4,})/i,
+  ];
+  for (const line of lines) {
+    for (const pattern of billPatterns) {
+      const match = line.match(pattern);
+      if (match && match[1] !== invoice_number) { // Ensure it's different from invoice number
+        bill_number = match[1].trim();
+        break;
+      }
+    }
+    if (bill_number) break;
+  }
+
+  return {
+    store_name,
+    vendor_name,
+    purchase_date,
+    product_name,
+    amount,
+    invoice_number,
+    bill_number,
+    raw_text: rawText,
+    confidence
+  };
 }

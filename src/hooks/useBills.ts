@@ -86,7 +86,7 @@ export function useBills() {
     return data as Bill;
   }, [user]);
 
-  const createBill = async (formData: BillFormData, imageFile?: File) => {
+  const createBill = async (formData: BillFormData, file?: File) => {
     if (!user) throw new Error('Not authenticated');
 
     // Refresh session to ensure valid JWT for RLS
@@ -95,23 +95,34 @@ export function useBills() {
       throw new Error('Session expired. Please sign in again.');
     }
 
-    let bill_image_url: string | null = null;
+    let bill_file_url: string | null = null;
 
-    if (imageFile) {
+    if (file) {
+      // Check if file is supported (images or PDF)
+      const isImage = file.type.startsWith('image/');
+      const isPDF = file.type === 'application/pdf';
+
+      if (!isImage && !isPDF) {
+        throw new Error('Unsupported file type. Only images and PDF files are allowed.');
+      }
+
       // Sanitize filename
-      const sanitizedName = imageFile.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+      const sanitizedName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
       const filePath = `${user.id}/${Date.now()}_${sanitizedName}`;
+
+      // Use the same bucket for both images and PDFs
       const { error: uploadError } = await supabase.storage
         .from('bill-images')
-        .upload(filePath, imageFile);
+        .upload(filePath, file);
+
       if (uploadError) {
-        throw new Error(`Image upload failed: ${uploadError.message}`);
+        throw new Error(`File upload failed: ${uploadError.message}`);
       }
 
       const { data: urlData } = supabase.storage
         .from('bill-images')
         .getPublicUrl(filePath);
-      bill_image_url = urlData.publicUrl;
+      bill_file_url = urlData.publicUrl;
     }
 
     // Sanitize text inputs to prevent XSS
@@ -121,6 +132,8 @@ export function useBills() {
         user_id: user.id,
         product_name: sanitizeHtml(formData.product_name),
         brand: formData.brand ? sanitizeHtml(formData.brand) : null,
+        vendor_name: formData.vendor_name ? sanitizeHtml(formData.vendor_name) : null,
+        bill_number: formData.bill_number ? sanitizeHtml(formData.bill_number) : null,
         purchase_date: formData.purchase_date,
         warranty_period_months: Math.min(Math.max(parseInt(formData.warranty_period_months) || 12, 0), 240),
         warranty_expiry: formData.warranty_expiry,
@@ -130,7 +143,7 @@ export function useBills() {
         price: Math.max(parseFloat(formData.price) || 0, 0),
         currency: formData.currency || 'INR',
         notes: formData.notes ? sanitizeHtml(formData.notes) : null,
-        bill_image_url,
+        bill_file_url,
       })
       .select()
       .single();
@@ -142,13 +155,15 @@ export function useBills() {
     return data as Bill;
   };
 
-  const updateBill = async (id: string, formData: Partial<BillFormData>, newImageFile?: File) => {
+  const updateBill = async (id: string, formData: Partial<BillFormData>, newFile?: File) => {
     if (!user) throw new Error('Not authenticated');
 
     const update: Record<string, unknown> = {};
 
     if (formData.product_name !== undefined) update.product_name = sanitizeHtml(formData.product_name);
     if (formData.brand !== undefined) update.brand = formData.brand ? sanitizeHtml(formData.brand) : null;
+    if (formData.vendor_name !== undefined) update.vendor_name = formData.vendor_name ? sanitizeHtml(formData.vendor_name) : null;
+    if (formData.bill_number !== undefined) update.bill_number = formData.bill_number ? sanitizeHtml(formData.bill_number) : null;
     if (formData.purchase_date !== undefined) update.purchase_date = formData.purchase_date;
     if (formData.warranty_period_months !== undefined) {
       update.warranty_period_months = Math.min(Math.max(parseInt(formData.warranty_period_months) || 12, 0), 240);
@@ -161,32 +176,41 @@ export function useBills() {
     if (formData.currency !== undefined) update.currency = formData.currency;
     if (formData.notes !== undefined) update.notes = formData.notes ? sanitizeHtml(formData.notes) : null;
 
-    // Handle new image upload
-    if (newImageFile) {
-      // Get old image URL to clean up after successful upload
+    // Handle new file upload (image or PDF)
+    if (newFile) {
+      // Check if file is supported
+      const isImage = newFile.type.startsWith('image/');
+      const isPDF = newFile.type === 'application/pdf';
+
+      if (!isImage && !isPDF) {
+        throw new Error('Unsupported file type. Only images and PDF files are allowed.');
+      }
+
+      // Get old file URL to clean up after successful upload
       const { data: existingBill } = await supabase
         .from('bills')
-        .select('bill_image_url')
+        .select('bill_file_url')
         .eq('id', id)
         .eq('user_id', user.id)
         .single();
 
-      const sanitizedName = newImageFile.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+      const sanitizedName = newFile.name.replace(/[^a-zA-Z0-9.-]/g, '_');
       const filePath = `${user.id}/${Date.now()}_${sanitizedName}`;
       const { error: uploadError } = await supabase.storage
         .from('bill-images')
-        .upload(filePath, newImageFile);
+        .upload(filePath, newFile);
+
       if (uploadError) {
-        throw new Error(`Image upload failed: ${uploadError.message}`);
+        throw new Error(`File upload failed: ${uploadError.message}`);
       }
 
       const { data: urlData } = supabase.storage
         .from('bill-images')
         .getPublicUrl(filePath);
-      update.bill_image_url = urlData.publicUrl;
+      update.bill_file_url = urlData.publicUrl;
 
-      // Delete old image from storage (best-effort)
-      await deleteStorageFile('bill-images', existingBill?.bill_image_url);
+      // Delete old file from storage (best-effort)
+      await deleteStorageFile('bill-images', existingBill?.bill_file_url);
     }
 
     const { data, error: updateError } = await supabase
@@ -207,10 +231,10 @@ export function useBills() {
   const deleteBill = async (billId: string) => {
     if (!user) throw new Error('Not authenticated');
 
-    // Fetch the bill first to get the image URL for cleanup
+    // Fetch the bill first to get the file URL for cleanup
     const { data: bill } = await supabase
       .from('bills')
-      .select('bill_image_url')
+      .select('bill_file_url')
       .eq('id', billId)
       .eq('user_id', user.id)
       .single();
@@ -224,8 +248,8 @@ export function useBills() {
 
     if (deleteError) throw deleteError;
 
-    // Clean up associated image from storage (best-effort)
-    await deleteStorageFile('bill-images', bill?.bill_image_url);
+    // Clean up associated file from storage (best-effort)
+    await deleteStorageFile('bill-images', bill?.bill_file_url);
 
     setBills((prev) => prev.filter((b) => b.id !== billId));
   };

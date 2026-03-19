@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { extractTextFromImage } from '@/services/ocr';
+import { extractTextFromFile } from '@/services/ocr';
 import type { OcrResult } from '@/types';
 
 export function useOCR() {
@@ -8,16 +8,17 @@ export function useOCR() {
   const [result, setResult] = useState<OcrResult | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const processImage = async (file: File) => {
+  const processFile = async (file: File) => {
     setProcessing(true);
     setProgress(0);
     setError(null);
     try {
-      const ocrResult = await extractTextFromImage(file, setProgress);
+      const ocrResult = await extractTextFromFile(file, setProgress);
       setResult(ocrResult);
       return ocrResult;
-    } catch {
-      setError('OCR processing failed. Please enter details manually.');
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'OCR processing failed';
+      setError(`${errorMessage}. Please enter details manually.`);
       return null;
     } finally {
       setProcessing(false);
@@ -31,5 +32,5 @@ export function useOCR() {
     setError(null);
   };
 
-  return { processing, progress, result, error, processImage, reset };
+  return { processing, progress, result, error, processFile, reset };
 }
