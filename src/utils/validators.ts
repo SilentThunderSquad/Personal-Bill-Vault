@@ -19,9 +19,12 @@ export function validateBillForm(data: BillFormData): Record<string, string> {
     errors.category = 'Category is required';
   }
 
-  const months = parseInt(data.warranty_period_months);
-  if (isNaN(months) || months < 0) {
-    errors.warranty_period_months = 'Valid warranty period is required';
+  // Only validate warranty period if has_warranty is true
+  if (data.has_warranty) {
+    const months = parseInt(data.warranty_period_months);
+    if (isNaN(months) || months < 0) {
+      errors.warranty_period_months = 'Valid warranty period is required';
+    }
   }
 
   const price = parseFloat(data.price);

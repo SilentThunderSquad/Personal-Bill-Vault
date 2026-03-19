@@ -3,11 +3,13 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { PRODUCT_CATEGORIES, CURRENCY_OPTIONS } from '@/utils/constants';
 import { calculateExpiryDate } from '@/utils/formatters';
 import { validateBillForm } from '@/utils/validators';
 import { Loader2, Package, Calendar, Store, FileText, Save } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import type { BillFormData } from '@/types';
 
 interface BillFormProps {
@@ -25,6 +27,7 @@ const emptyForm: BillFormData = {
   vendor_name: '',
   bill_number: '',
   purchase_date: '',
+  has_warranty: true,
   warranty_period_months: '12',
   warranty_expiry: '',
   invoice_number: '',
@@ -64,9 +67,9 @@ export function BillForm({
     }
   }, [initialData]);
 
-  // Auto-calculate warranty expiry when purchase date or period changes
+  // Auto-calculate warranty expiry when purchase date or period changes (only if has_warranty is true)
   useEffect(() => {
-    if (form.purchase_date && form.warranty_period_months) {
+    if (form.has_warranty && form.purchase_date && form.warranty_period_months) {
       const months = parseInt(form.warranty_period_months);
       if (!isNaN(months) && months >= 0) {
         const expiry = calculateExpiryDate(form.purchase_date, months);
@@ -74,10 +77,13 @@ export function BillForm({
           setForm((prev) => ({ ...prev, warranty_expiry: expiry }));
         }
       }
+    } else if (!form.has_warranty) {
+      // Clear warranty fields when warranty is disabled
+      setForm((prev) => ({ ...prev, warranty_period_months: '0', warranty_expiry: '' }));
     }
-  }, [form.purchase_date, form.warranty_period_months]);
+  }, [form.has_warranty, form.purchase_date, form.warranty_period_months]);
 
-  const handleChange = (field: keyof BillFormData, value: string) => {
+  const handleChange = (field: keyof BillFormData, value: string | boolean) => {
     setForm((prev) => ({ ...prev, [field]: value }));
     if (errors[field]) {
       setErrors((prev) => {
@@ -238,52 +244,94 @@ export function BillForm({
       {/* Warranty Information */}
       <div className="bg-muted/30 rounded-xl p-4 sm:p-5">
         <SectionHeader icon={Calendar} title="Warranty Information" />
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="purchase_date" className="text-sm">
-              Purchase Date <span className="text-destructive">*</span>
-            </Label>
-            <Input
-              id="purchase_date"
-              type="date"
-              value={form.purchase_date}
-              onChange={(e) => handleChange('purchase_date', e.target.value)}
-              className={`h-11 ${errors.purchase_date ? 'border-destructive' : ''}`}
-              aria-invalid={!!errors.purchase_date}
-            />
-            {errors.purchase_date && (
-              <p className="text-xs text-destructive" role="alert">{errors.purchase_date}</p>
+        <div className="space-y-4">
+          {/* Purchase Date - Always visible */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="purchase_date" className="text-sm">
+                Purchase Date <span className="text-destructive">*</span>
+              </Label>
+              <Input
+                id="purchase_date"
+                type="date"
+                value={form.purchase_date}
+                onChange={(e) => handleChange('purchase_date', e.target.value)}
+                className={`h-11 ${errors.purchase_date ? 'border-destructive' : ''}`}
+                aria-invalid={!!errors.purchase_date}
+              />
+              {errors.purchase_date && (
+                <p className="text-xs text-destructive" role="alert">{errors.purchase_date}</p>
+              )}
+            </div>
+
+            {/* Has Warranty Toggle */}
+            <div className="space-y-2">
+              <Label htmlFor="has_warranty" className="text-sm">Has Warranty</Label>
+              <div className="flex items-center h-11 gap-3">
+                <Switch
+                  id="has_warranty"
+                  checked={form.has_warranty}
+                  onCheckedChange={(checked) => handleChange('has_warranty', checked)}
+                  disabled={isDisabled}
+                />
+                <span className="text-sm text-muted-foreground">
+                  {form.has_warranty ? 'Product has warranty' : 'No warranty'}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Warranty Fields - Conditionally rendered with smooth animation */}
+          <AnimatePresence mode="wait">
+            {form.has_warranty && (
+              <motion.div
+                key="warranty-fields"
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.2, ease: 'easeInOut' }}
+                className="overflow-hidden"
+              >
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+                  <div className="space-y-2">
+                    <Label htmlFor="warranty_period_months" className="text-sm">
+                      Warranty Period (months) <span className="text-destructive">*</span>
+                    </Label>
+                    <Input
+                      id="warranty_period_months"
+                      type="number"
+                      min="0"
+                      max="240"
+                      value={form.warranty_period_months}
+                      onChange={(e) => handleChange('warranty_period_months', e.target.value)}
+                      placeholder="12"
+                      className={`h-11 ${errors.warranty_period_months ? 'border-destructive' : ''}`}
+                      disabled={isDisabled}
+                    />
+                    {errors.warranty_period_months && (
+                      <p className="text-xs text-destructive" role="alert">{errors.warranty_period_months}</p>
+                    )}
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="warranty_expiry" className="text-sm">Warranty Expiry</Label>
+                    <Input
+                      id="warranty_expiry"
+                      type="date"
+                      value={form.warranty_expiry}
+                      onChange={(e) => handleChange('warranty_expiry', e.target.value)}
+                      className="h-11"
+                      disabled={isDisabled}
+                    />
+                  </div>
+                  <div className="sm:col-span-2">
+                    <p className="text-xs text-muted-foreground">
+                      Auto-calculated from purchase date + warranty period
+                    </p>
+                  </div>
+                </div>
+              </motion.div>
             )}
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="warranty_period_months" className="text-sm">
-              Warranty Period (months) <span className="text-destructive">*</span>
-            </Label>
-            <Input
-              id="warranty_period_months"
-              type="number"
-              min="0"
-              max="240"
-              value={form.warranty_period_months}
-              onChange={(e) => handleChange('warranty_period_months', e.target.value)}
-              placeholder="12"
-              className={`h-11 ${errors.warranty_period_months ? 'border-destructive' : ''}`}
-            />
-            {errors.warranty_period_months && (
-              <p className="text-xs text-destructive" role="alert">{errors.warranty_period_months}</p>
-            )}
-          </div>
-          <div className="space-y-2 sm:col-span-2">
-            <Label htmlFor="warranty_expiry" className="text-sm">Warranty Expiry</Label>
-            <Input
-              id="warranty_expiry"
-              type="date"
-              value={form.warranty_expiry}
-              onChange={(e) => handleChange('warranty_expiry', e.target.value)}
-              className="h-11"
-            />
-            <p className="text-xs text-muted-foreground">Auto-calculated from purchase date + warranty period</p>
-          </div>
+          </AnimatePresence>
         </div>
       </div>
 

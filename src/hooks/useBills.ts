@@ -135,8 +135,11 @@ export function useBills() {
         vendor_name: formData.vendor_name ? sanitizeHtml(formData.vendor_name) : null,
         bill_number: formData.bill_number ? sanitizeHtml(formData.bill_number) : null,
         purchase_date: formData.purchase_date,
-        warranty_period_months: Math.min(Math.max(parseInt(formData.warranty_period_months) || 12, 0), 240),
-        warranty_expiry: formData.warranty_expiry,
+        has_warranty: formData.has_warranty,
+        warranty_period_months: formData.has_warranty
+          ? Math.min(Math.max(parseInt(formData.warranty_period_months) || 12, 0), 240)
+          : 0,
+        warranty_expiry: formData.has_warranty ? formData.warranty_expiry : '',
         invoice_number: formData.invoice_number ? sanitizeHtml(formData.invoice_number) : null,
         store_name: sanitizeHtml(formData.store_name),
         category: formData.category,
@@ -165,10 +168,18 @@ export function useBills() {
     if (formData.vendor_name !== undefined) update.vendor_name = formData.vendor_name ? sanitizeHtml(formData.vendor_name) : null;
     if (formData.bill_number !== undefined) update.bill_number = formData.bill_number ? sanitizeHtml(formData.bill_number) : null;
     if (formData.purchase_date !== undefined) update.purchase_date = formData.purchase_date;
+    if (formData.has_warranty !== undefined) update.has_warranty = formData.has_warranty;
     if (formData.warranty_period_months !== undefined) {
-      update.warranty_period_months = Math.min(Math.max(parseInt(formData.warranty_period_months) || 12, 0), 240);
+      // Only set warranty period if has_warranty is true (or if has_warranty is not being updated)
+      const hasWarranty = formData.has_warranty !== undefined ? formData.has_warranty : true;
+      update.warranty_period_months = hasWarranty
+        ? Math.min(Math.max(parseInt(formData.warranty_period_months) || 12, 0), 240)
+        : 0;
     }
-    if (formData.warranty_expiry !== undefined) update.warranty_expiry = formData.warranty_expiry;
+    if (formData.warranty_expiry !== undefined) {
+      const hasWarranty = formData.has_warranty !== undefined ? formData.has_warranty : true;
+      update.warranty_expiry = hasWarranty ? formData.warranty_expiry : '';
+    }
     if (formData.invoice_number !== undefined) update.invoice_number = formData.invoice_number ? sanitizeHtml(formData.invoice_number) : null;
     if (formData.store_name !== undefined) update.store_name = sanitizeHtml(formData.store_name);
     if (formData.category !== undefined) update.category = formData.category;

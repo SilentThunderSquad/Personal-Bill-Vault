@@ -6,6 +6,7 @@ export interface Bill {
   vendor_name: string | null;
   bill_number: string | null;
   purchase_date: string;
+  has_warranty: boolean;
   warranty_period_months: number;
   warranty_expiry: string;
   invoice_number: string | null;
@@ -25,6 +26,7 @@ export interface BillFormData {
   vendor_name: string;
   bill_number: string;
   purchase_date: string;
+  has_warranty: boolean;
   warranty_period_months: string;
   warranty_expiry: string;
   invoice_number: string;
