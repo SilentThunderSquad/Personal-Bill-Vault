@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/services/supabase';
 import { Button } from '@/components/ui/button';
@@ -7,16 +7,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
-import { Bell, User, Shield, Camera, Lock, Save, Loader2, BarChart3 } from 'lucide-react';
+import { Bell, Shield, Lock, Loader2, BarChart3 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
-import type { NotificationSettings, UserProfile } from '@/types';
-import { sanitizePhoneNumber } from '@/utils/security';
-
-const COUNTRIES = [
-  'India', 'United States', 'United Kingdom', 'Canada', 'Australia',
-  'Germany', 'France', 'Japan', 'Singapore', 'UAE', 'Other',
-];
+import { activityTracker, ActivityHelpers } from '@/services/activityTracker';
+import type { NotificationSettings } from '@/types';
 
 const DEFAULT_SETTINGS: Omit<NotificationSettings, 'id' | 'user_id' | 'created_at' | 'updated_at'> = {
   email_enabled: true,
@@ -28,19 +23,6 @@ const DEFAULT_SETTINGS: Omit<NotificationSettings, 'id' | 'user_id' | 'created_a
 
 export default function Settings() {
   const { user, signOut, updatePassword } = useAuth();
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  // Profile state
-  const [, setProfile] = useState<UserProfile | null>(null);
-  const [profileForm, setProfileForm] = useState({
-    fullName: '',
-    mobileNumber: '',
-    country: 'India',
-  });
-  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
-  const [loadingProfile, setLoadingProfile] = useState(true);
-  const [savingProfile, setSavingProfile] = useState(false);
-  const [uploadingAvatar, setUploadingAvatar] = useState(false);
 
   // Password state
   const [passwordForm, setPasswordForm] = useState({
@@ -55,49 +37,6 @@ export default function Settings() {
   const [loadingSettings, setLoadingSettings] = useState(true);
   const [settingsError, setSettingsError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
-
-  // Load profile
-  useEffect(() => {
-    const loadProfile = async () => {
-      if (!user) return;
-      setLoadingProfile(true);
-
-      const { data, error } = await supabase
-        .from('user_profiles')
-        .select('*')
-        .eq('user_id', user.id)
-        .single();
-
-      if (error && error.code === 'PGRST116') {
-        // Create new profile
-        const { data: newProfile } = await supabase
-          .from('user_profiles')
-          .insert({ user_id: user.id, full_name: '' })
-          .select()
-          .single();
-        if (newProfile) {
-          setProfile(newProfile);
-          setProfileForm({
-            fullName: newProfile.full_name || '',
-            mobileNumber: newProfile.mobile_number || '',
-            country: newProfile.country || 'India',
-          });
-          setAvatarUrl(newProfile.avatar_url);
-        }
-      } else if (data) {
-        setProfile(data);
-        setProfileForm({
-          fullName: data.full_name || '',
-          mobileNumber: data.mobile_number || '',
-          country: data.country || 'India',
-        });
-        setAvatarUrl(data.avatar_url);
-      }
-      setLoadingProfile(false);
-    };
-
-    loadProfile();
-  }, [user]);
 
   // Load notification settings
   useEffect(() => {
@@ -134,97 +73,6 @@ export default function Settings() {
 
     loadSettings();
   }, [user]);
-
-  const handleSaveProfile = async () => {
-    if (!user) return;
-    setSavingProfile(true);
-
-    try {
-      const { error } = await supabase
-        .from('user_profiles')
-        .update({
-          full_name: profileForm.fullName.trim(),
-          mobile_number: profileForm.mobileNumber || null,
-          country: profileForm.country,
-        })
-        .eq('user_id', user.id);
-
-      if (error) {
-        toast.error('Failed to update profile');
-      } else {
-        toast.success('Profile updated successfully');
-      }
-    } catch {
-      toast.error('Something went wrong');
-    } finally {
-      setSavingProfile(false);
-    }
-  };
-
-  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file || !user) return;
-
-    // Validate file
-    if (!file.type.startsWith('image/')) {
-      toast.error('Please upload an image file');
-      return;
-    }
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error('Image must be less than 5MB');
-      return;
-    }
-
-    setUploadingAvatar(true);
-
-    try {
-      const fileExt = file.name.split('.').pop();
-      const filePath = `${user.id}/avatar.${fileExt}`;
-
-      // Delete old avatar files to prevent orphans (e.g. switching .png to .jpg)
-      const { data: existingFiles } = await supabase.storage
-        .from('avatars')
-        .list(user.id);
-      if (existingFiles && existingFiles.length > 0) {
-        const filesToDelete = existingFiles.map((f) => `${user.id}/${f.name}`);
-        await supabase.storage.from('avatars').remove(filesToDelete);
-      }
-
-      // Upload new avatar
-      const { error: uploadError } = await supabase.storage
-        .from('avatars')
-        .upload(filePath, file, { upsert: true });
-
-      if (uploadError) {
-        console.error('Upload error:', uploadError);
-        if (uploadError.message.includes('Bucket not found')) {
-          toast.error('Storage not configured. Please create the "avatars" bucket in Supabase.');
-        } else if (uploadError.message.includes('policy') || uploadError.message.includes('permission') || uploadError.message.includes('not authorized')) {
-          toast.error('Storage policy not configured. Run the storage policies SQL in Supabase.');
-        } else {
-          toast.error(`Upload failed: ${uploadError.message}`);
-        }
-        return;
-      }
-
-      const { data: urlData } = supabase.storage
-        .from('avatars')
-        .getPublicUrl(filePath);
-
-      // Update profile
-      await supabase
-        .from('user_profiles')
-        .update({ avatar_url: urlData.publicUrl })
-        .eq('user_id', user.id);
-
-      setAvatarUrl(urlData.publicUrl + '?t=' + Date.now());
-      toast.success('Profile picture updated');
-    } catch {
-      toast.error('Failed to upload image');
-    } finally {
-      setUploadingAvatar(false);
-    }
-  };
 
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -270,6 +118,14 @@ export default function Settings() {
     } else {
       setSettings({ ...settings, [key]: value });
       toast.success('Settings updated');
+      // Log activity
+      try {
+        await activityTracker.logActivity(
+          ActivityHelpers.settingsUpdated()
+        );
+      } catch (activityError) {
+        console.error('Failed to log settings update activity:', activityError);
+      }
     }
     setSaving(false);
   };
@@ -288,140 +144,11 @@ export default function Settings() {
       className="max-w-2xl mx-auto space-y-4 sm:space-y-6 pb-8"
     >
       <div>
-        <h1 className="text-xl sm:text-2xl font-bold text-foreground">Settings</h1>
-        <p className="text-sm sm:text-base text-muted-foreground mt-1">Manage your account and preferences</p>
+        <h1 className="text-xl sm:text-2xl font-bold text-foreground">Account Settings</h1>
+        <p className="text-sm sm:text-base text-muted-foreground mt-1">
+          Manage your account security, notifications, and preferences
+        </p>
       </div>
-
-      {/* Profile Card */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center gap-2">
-            <User className="h-5 w-5 text-accent" />
-            <CardTitle>Profile</CardTitle>
-          </div>
-          <CardDescription>Update your personal information</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          {loadingProfile ? (
-            <div className="flex justify-center py-8">
-              <Loader2 className="h-6 w-6 animate-spin text-accent" />
-            </div>
-          ) : (
-            <>
-              {/* Avatar */}
-              <div className="flex items-center gap-4">
-                <div className="relative">
-                  <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center overflow-hidden border-2 border-border">
-                    {avatarUrl ? (
-                      <img src={avatarUrl} alt="Profile" className="w-full h-full object-cover" />
-                    ) : (
-                      <User className="h-10 w-10 text-muted-foreground" />
-                    )}
-                  </div>
-                  <button
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={uploadingAvatar}
-                    className="absolute -bottom-1 -right-1 p-1.5 bg-accent text-white rounded-full hover:bg-accent/90 transition-colors disabled:opacity-50"
-                    aria-label="Upload profile picture"
-                  >
-                    {uploadingAvatar ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <Camera className="h-4 w-4" />
-                    )}
-                  </button>
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/*"
-                    onChange={handleAvatarUpload}
-                    className="hidden"
-                  />
-                </div>
-                <div>
-                  <p className="text-sm font-medium">Profile Picture</p>
-                  <p className="text-xs text-muted-foreground">JPG, PNG or GIF. Max 5MB.</p>
-                </div>
-              </div>
-
-              <Separator />
-
-              {/* Form Fields */}
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor="fullName">Full Name</Label>
-                  <Input
-                    id="fullName"
-                    value={profileForm.fullName}
-                    onChange={(e) => setProfileForm({ ...profileForm, fullName: e.target.value })}
-                    placeholder="John Doe"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input
-                    id="email"
-                    value={user?.email || ''}
-                    disabled
-                    className="bg-muted"
-                  />
-                  <p className="text-xs text-muted-foreground">Email cannot be changed</p>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="mobile">Mobile Number</Label>
-                  <Input
-                    id="mobile"
-                    value={profileForm.mobileNumber}
-                    onChange={(e) => setProfileForm({ ...profileForm, mobileNumber: sanitizePhoneNumber(e.target.value) })}
-                    placeholder="+91 9876543210"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="country">Country</Label>
-                  <select
-                    id="country"
-                    value={profileForm.country}
-                    onChange={(e) => setProfileForm({ ...profileForm, country: e.target.value })}
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-                  >
-                    {COUNTRIES.map((country) => (
-                      <option key={country} value={country}>{country}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label>Member Since</Label>
-                <p className="text-sm text-muted-foreground">
-                  {user?.created_at ? new Date(user.created_at).toLocaleDateString('en-US', {
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric',
-                  }) : 'N/A'}
-                </p>
-              </div>
-
-              <Button onClick={handleSaveProfile} disabled={savingProfile} className="w-full sm:w-auto">
-                {savingProfile ? (
-                  <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Saving...
-                  </>
-                ) : (
-                  <>
-                    <Save className="h-4 w-4 mr-2" />
-                    Save Changes
-                  </>
-                )}
-              </Button>
-            </>
-          )}
-        </CardContent>
-      </Card>
 
       {/* Change Password Card */}
       <Card>

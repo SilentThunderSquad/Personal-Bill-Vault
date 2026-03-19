@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react';
 import { supabase } from '@/services/supabase';
 import { useAuth } from '@/context/AuthContext';
 import { sanitizeHtml } from '@/utils/security';
+import { activityTracker, ActivityHelpers } from '@/services/activityTracker';
 import type { Bill, BillFormData } from '@/types';
 
 const PAGE_SIZE = 20;
@@ -153,6 +154,15 @@ export function useBills() {
 
     if (insertError) throw insertError;
 
+    // Log activity
+    try {
+      await activityTracker.logActivity(
+        ActivityHelpers.billAdded(data.id, data.product_name)
+      );
+    } catch (error) {
+      console.error('Failed to log bill creation activity:', error);
+    }
+
     // Add to local state
     setBills((prev) => [data as Bill, ...prev]);
     return data as Bill;
@@ -234,6 +244,15 @@ export function useBills() {
 
     if (updateError) throw updateError;
 
+    // Log activity
+    try {
+      await activityTracker.logActivity(
+        ActivityHelpers.billUpdated(data.id, data.product_name)
+      );
+    } catch (error) {
+      console.error('Failed to log bill update activity:', error);
+    }
+
     // Update local state
     setBills((prev) => prev.map((b) => (b.id === id ? (data as Bill) : b)));
     return data as Bill;
@@ -242,10 +261,10 @@ export function useBills() {
   const deleteBill = async (billId: string) => {
     if (!user) throw new Error('Not authenticated');
 
-    // Fetch the bill first to get the file URL for cleanup
+    // Fetch the bill first to get the file URL and product name for cleanup and logging
     const { data: bill } = await supabase
       .from('bills')
-      .select('bill_file_url')
+      .select('bill_file_url, product_name')
       .eq('id', billId)
       .eq('user_id', user.id)
       .single();
@@ -258,6 +277,15 @@ export function useBills() {
       .eq('user_id', user.id);
 
     if (deleteError) throw deleteError;
+
+    // Log activity
+    try {
+      await activityTracker.logActivity(
+        ActivityHelpers.billDeleted(bill?.product_name || 'Unknown Item')
+      );
+    } catch (error) {
+      console.error('Failed to log bill deletion activity:', error);
+    }
 
     // Clean up associated file from storage (best-effort)
     await deleteStorageFile('bill-images', bill?.bill_file_url);

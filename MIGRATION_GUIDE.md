@@ -1,8 +1,8 @@
 # Database Migration Guide
 
-## Apply Analytics Setting Migration
+## Apply All Pending Migrations
 
-The analytics feature requires a database schema update. Follow these steps to apply the migration:
+The latest features require database schema updates. Follow these steps to apply all migrations:
 
 ### Option 1: Using Supabase Dashboard (Recommended)
 
@@ -14,69 +14,103 @@ The analytics feature requires a database schema update. Follow these steps to a
    - Click on "SQL Editor" in the left sidebar
    - Click "New query"
 
-3. **Run the Migration**
-   - Copy the SQL from `supabase/migrations/003_add_analytics_setting.sql`:
+3. **Run Each Migration**
+   Apply these migrations in order:
+
+   **Migration 003: Analytics Setting**
    ```sql
    -- Add analytics preferences to notification settings
    ALTER TABLE notification_settings
    ADD COLUMN analytics_enabled boolean DEFAULT true;
    ```
-   - Paste it into the SQL editor
-   - Click "Run" or press `Ctrl/Cmd + Enter`
+
+   **Migration 004: User Activities**
+   ```sql
+   -- Add user activities table for tracking user actions
+   CREATE TABLE IF NOT EXISTS public.user_activities (
+     id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+     user_id uuid REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+     activity_type text NOT NULL,
+     activity_title text NOT NULL,
+     activity_description text,
+     related_entity_id uuid,
+     related_entity_type text,
+     metadata jsonb DEFAULT '{}',
+     created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL
+   );
+
+   -- Create indexes for performance
+   CREATE INDEX IF NOT EXISTS user_activities_user_id_created_at_idx
+     ON public.user_activities(user_id, created_at DESC);
+
+   CREATE INDEX IF NOT EXISTS user_activities_entity_idx
+     ON public.user_activities(related_entity_id, related_entity_type);
+
+   -- Enable RLS
+   ALTER TABLE public.user_activities ENABLE ROW LEVEL SECURITY;
+
+   -- RLS policies
+   DROP POLICY IF EXISTS "Users can view own activities" ON public.user_activities;
+   DROP POLICY IF EXISTS "Users can insert own activities" ON public.user_activities;
+
+   CREATE POLICY "Users can view own activities"
+     ON public.user_activities FOR SELECT TO authenticated
+     USING (auth.uid() = user_id);
+
+   CREATE POLICY "Users can insert own activities"
+     ON public.user_activities FOR INSERT TO authenticated
+     WITH CHECK (auth.uid() = user_id);
+   ```
 
 4. **Verify Success**
-   - You should see "Success. No rows returned"
-   - The `analytics_enabled` column has been added to `notification_settings` table
+   - Check that new columns/tables exist in your database
+   - Verify RLS policies are applied
 
 ### Option 2: Using Supabase CLI
 
 If you have the Supabase CLI installed:
 
 ```bash
-# Navigate to project directory
 cd C:\Users\vivek\Documents\GitHub\Personal-Bill-Vault
 
-# Apply pending migrations
+# Apply all pending migrations
 npx supabase db push
-
-# Or if you have Supabase CLI installed globally
-supabase db push
 ```
 
-### Verification
+### What's New After Migrations
 
-After applying the migration, verify it worked:
-
-1. Go to Supabase Dashboard → Table Editor
-2. Select `notification_settings` table
-3. Check that `analytics_enabled` column exists (boolean type, default: true)
+✅ **Analytics Dashboard** - Visual charts and insights
+✅ **User Profile Page** - Dedicated profile management
+✅ **Activity Tracking** - Complete user action logging
+✅ **Enhanced Settings** - Clean, organized settings page
 
 ### Troubleshooting
 
 **Error: column already exists**
-- The migration was already applied. You're good to go!
+- Migration already applied, you're good to go!
+
+**Error: table exists**
+- The user_activities table was already created
 
 **Error: permission denied**
-- Make sure you're using the correct Supabase project
 - Verify you have admin access to the database
-
-**Error: table doesn't exist**
-- Run the previous migrations first (001 and 002)
-- Check that your database is properly set up
-
-### After Migration
-
-Once the migration is applied:
-1. Refresh your application
-2. Go to Settings → Analytics section
-3. Toggle "Dashboard Analytics" - it should now work without errors!
 
 ---
 
-## Previous Migrations
+## Features Overview
 
-If you haven't run these yet, apply them in order:
+### Dashboard Analytics
+- Monthly bill upload trends
+- Category distribution charts
+- Toggleable via Settings → Analytics
 
-1. `001_initial_schema.sql` - Creates core tables
-2. `002_add_has_warranty.sql` - Adds warranty toggle field
-3. `003_add_analytics_setting.sql` - Adds analytics preference (this migration)
+### Profile & Activity System
+- **Profile Page** (`/profile`): Complete user profile management
+- **Settings Page** (`/settings`): Account security and preferences only
+- **Activity Tracking**: All user actions logged automatically
+- **Activity Dropdown**: Recent activities in header navigation
+
+### Page Structure Changes
+- **Before**: Settings page contained profile information
+- **After**: Profile information moved to dedicated `/profile` page
+- **Settings**: Now focused only on account settings, notifications, and preferences

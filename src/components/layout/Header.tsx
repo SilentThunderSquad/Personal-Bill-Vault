@@ -12,7 +12,8 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { NotificationBell } from '@/components/common/NotificationBell';
-import { LogOut, Settings, Home } from 'lucide-react';
+import { ActivityDropdown } from '@/components/common/ActivityDropdown';
+import { LogOut, Settings, Home, UserIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import type { UserProfile } from '@/types';
 
@@ -24,6 +25,7 @@ export function Header({ onMenuClick: _onMenuClick }: HeaderProps) {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [headerImageError, setHeaderImageError] = useState(false);
 
   useEffect(() => {
     const loadProfile = async () => {
@@ -47,6 +49,42 @@ export function Header({ onMenuClick: _onMenuClick }: HeaderProps) {
   const displayName = profile?.full_name || user?.email?.split('@')[0] || 'User';
   const initials = displayName.slice(0, 2).toUpperCase();
 
+  // Get avatar URL with Google profile fallback
+  const getAvatarUrl = () => {
+    console.log('Header Avatar Debug:', {
+      profileAvatarUrl: profile?.avatar_url,
+      userMetadataPicture: user?.user_metadata?.picture,
+      userMetadataAvatar: user?.user_metadata?.avatar_url,
+      headerImageError
+    });
+
+    // Check if we have a custom uploaded avatar (but not Google URLs which might have CORS issues)
+    if (profile?.avatar_url && profile.avatar_url.trim() && profile.avatar_url.startsWith('http') && !profile.avatar_url.includes('googleusercontent.com')) {
+      console.log('Header using custom profile avatar:', profile.avatar_url);
+      return profile.avatar_url;
+    }
+
+    // Always use fresh Google profile images from user metadata
+    if (user?.user_metadata?.picture) {
+      console.log('Header using Google picture:', user.user_metadata.picture);
+      return user.user_metadata.picture;
+    }
+    if (user?.user_metadata?.avatar_url) {
+      console.log('Header using Google avatar_url:', user.user_metadata.avatar_url);
+      return user.user_metadata.avatar_url;
+    }
+
+    console.log('Header: No avatar found, using fallback');
+    return null;
+  };
+
+  const avatarUrl = getAvatarUrl();
+
+  // Reset header image error when avatar URL changes
+  useEffect(() => {
+    setHeaderImageError(false);
+  }, [avatarUrl]);
+
   return (
     <header className="sticky top-0 z-20 bg-background/80 backdrop-blur-md border-b border-border px-4 md:px-6 h-16 flex items-center justify-between">
       <div className="flex items-center gap-2">
@@ -59,14 +97,19 @@ export function Header({ onMenuClick: _onMenuClick }: HeaderProps) {
         </Link>
       </div>
 
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2">
         <NotificationBell />
+        <ActivityDropdown />
 
         <DropdownMenu>
           <DropdownMenuTrigger className="flex items-center gap-2 px-2 py-1.5 rounded-full hover:bg-muted transition-colors">
             <Avatar className="h-8 w-8">
-              {profile?.avatar_url ? (
-                <AvatarImage src={profile.avatar_url} alt={displayName} />
+              {avatarUrl && !headerImageError ? (
+                <AvatarImage
+                  src={avatarUrl}
+                  alt={displayName}
+                  onError={() => setHeaderImageError(true)}
+                />
               ) : null}
               <AvatarFallback className="bg-accent/20 text-accent text-sm">{initials}</AvatarFallback>
             </Avatar>
@@ -80,6 +123,10 @@ export function Header({ onMenuClick: _onMenuClick }: HeaderProps) {
               <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
             </div>
             <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => navigate('/profile')}>
+              <UserIcon className="mr-2 h-4 w-4" />
+              Profile
+            </DropdownMenuItem>
             <DropdownMenuItem onClick={() => navigate('/settings')}>
               <Settings className="mr-2 h-4 w-4" />
               Settings

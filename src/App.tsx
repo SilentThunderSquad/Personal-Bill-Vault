@@ -15,6 +15,7 @@ const Bills = lazy(() => import('@/pages/Bills'));
 const AddBill = lazy(() => import('@/pages/AddBill'));
 const BillDetailPage = lazy(() => import('@/pages/BillDetail'));
 const Settings = lazy(() => import('@/pages/Settings'));
+const Profile = lazy(() => import('@/pages/Profile'));
 const Notifications = lazy(() => import('@/pages/Notifications'));
 const NotFound = lazy(() => import('@/pages/NotFound'));
 
@@ -42,6 +43,7 @@ function App() {
               <Route path="/bills/new" element={<AddBill />} />
               <Route path="/bills/:id" element={<BillDetailPage />} />
               <Route path="/settings" element={<Settings />} />
+              <Route path="/profile" element={<Profile />} />
               <Route path="/notifications" element={<Notifications />} />
             </Route>
           </Route>

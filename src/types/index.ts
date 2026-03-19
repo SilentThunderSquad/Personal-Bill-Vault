@@ -100,3 +100,32 @@ export interface DashboardStats {
   expiringSoon: number;
   expired: number;
 }
+
+export interface UserActivity {
+  id: string;
+  user_id: string;
+  activity_type: string;
+  activity_title: string;
+  activity_description: string | null;
+  related_entity_id: string | null;
+  related_entity_type: string | null;
+  metadata: Record<string, any>;
+  created_at: string;
+}
+
+export type ActivityType =
+  | 'bill_added'
+  | 'bill_updated'
+  | 'bill_deleted'
+  | 'profile_updated'
+  | 'settings_updated'
+  | 'warranty_expired';
+
+export interface ActivityLogEntry {
+  type: ActivityType;
+  title: string;
+  description?: string;
+  entityId?: string;
+  entityType?: string;
+  metadata?: Record<string, any>;
+}
