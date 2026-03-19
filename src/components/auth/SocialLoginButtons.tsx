@@ -54,46 +54,35 @@ export function SocialLoginButtons({ disabled }: SocialLoginButtonsProps) {
   const isLoading = loadingProvider !== null;
 
   return (
-    <div className="space-y-3">
-      <div className="relative">
-        <div className="absolute inset-0 flex items-center">
-          <span className="w-full border-t border-border" />
-        </div>
-        <div className="relative flex justify-center text-xs uppercase">
-          <span className="bg-card px-2 text-muted-foreground">or continue with</span>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-2 gap-3">
-        <Button
-          type="button"
-          variant="outline"
-          className="h-11 gap-2 text-sm font-medium"
-          onClick={() => handleSocialLogin('google')}
-          disabled={disabled || isLoading || !isConfigured}
-        >
-          {loadingProvider === 'google' ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <GoogleIcon className="h-4 w-4" />
-          )}
-          Google
-        </Button>
-        <Button
-          type="button"
-          variant="outline"
-          className="h-11 gap-2 text-sm font-medium"
-          onClick={() => handleSocialLogin('github')}
-          disabled={disabled || isLoading || !isConfigured}
-        >
-          {loadingProvider === 'github' ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <GitHubIcon className="h-4 w-4" />
-          )}
-          GitHub
-        </Button>
-      </div>
+    <div className="grid grid-cols-2 gap-3">
+      <Button
+        type="button"
+        variant="outline"
+        className="h-11 gap-2 text-sm font-medium"
+        onClick={() => handleSocialLogin('google')}
+        disabled={disabled || isLoading || !isConfigured}
+      >
+        {loadingProvider === 'google' ? (
+          <Loader2 className="h-4 w-4 animate-spin" />
+        ) : (
+          <GoogleIcon className="h-4 w-4" />
+        )}
+        Google
+      </Button>
+      <Button
+        type="button"
+        variant="outline"
+        className="h-11 gap-2 text-sm font-medium"
+        onClick={() => handleSocialLogin('github')}
+        disabled={disabled || isLoading || !isConfigured}
+      >
+        {loadingProvider === 'github' ? (
+          <Loader2 className="h-4 w-4 animate-spin" />
+        ) : (
+          <GitHubIcon className="h-4 w-4" />
+        )}
+        GitHub
+      </Button>
     </div>
   );
 }

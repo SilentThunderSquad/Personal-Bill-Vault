@@ -2,12 +2,10 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/services/supabase';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
-import { Bell, Shield, Lock, Loader2, BarChart3 } from 'lucide-react';
+import { Bell, Shield, Loader2, BarChart3 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { activityTracker, ActivityHelpers } from '@/services/activityTracker';
@@ -22,15 +20,7 @@ const DEFAULT_SETTINGS: Omit<NotificationSettings, 'id' | 'user_id' | 'created_a
 };
 
 export default function Settings() {
-  const { user, signOut, updatePassword } = useAuth();
-
-  // Password state
-  const [passwordForm, setPasswordForm] = useState({
-    currentPassword: '',
-    newPassword: '',
-    confirmPassword: '',
-  });
-  const [changingPassword, setChangingPassword] = useState(false);
+  const { user, signOut } = useAuth();
 
   // Notification settings state
   const [settings, setSettings] = useState<NotificationSettings | null>(null);
@@ -74,36 +64,6 @@ export default function Settings() {
     loadSettings();
   }, [user]);
 
-  const handleChangePassword = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
-      toast.error('New passwords do not match');
-      return;
-    }
-
-    if (passwordForm.newPassword.length < 8) {
-      toast.error('Password must be at least 8 characters');
-      return;
-    }
-
-    setChangingPassword(true);
-
-    try {
-      const { error } = await updatePassword(passwordForm.newPassword);
-      if (error) {
-        toast.error(error.message);
-      } else {
-        toast.success('Password changed successfully');
-        setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
-      }
-    } catch {
-      toast.error('Failed to change password');
-    } finally {
-      setChangingPassword(false);
-    }
-  };
-
   const updateSetting = async (key: keyof NotificationSettings, value: boolean) => {
     if (!user || !settings) return;
     setSaving(true);
@@ -146,55 +106,9 @@ export default function Settings() {
       <div>
         <h1 className="text-xl sm:text-2xl font-bold text-foreground">Account Settings</h1>
         <p className="text-sm sm:text-base text-muted-foreground mt-1">
-          Manage your account security, notifications, and preferences
+          Manage your account notifications, analytics, and preferences
         </p>
       </div>
-
-      {/* Change Password Card */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center gap-2">
-            <Lock className="h-5 w-5 text-accent" />
-            <CardTitle>Change Password</CardTitle>
-          </div>
-          <CardDescription>Update your password to keep your account secure</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleChangePassword} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="newPassword">New Password</Label>
-              <Input
-                id="newPassword"
-                type="password"
-                value={passwordForm.newPassword}
-                onChange={(e) => setPasswordForm({ ...passwordForm, newPassword: e.target.value })}
-                placeholder="Enter new password"
-                minLength={8}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="confirmPassword">Confirm New Password</Label>
-              <Input
-                id="confirmPassword"
-                type="password"
-                value={passwordForm.confirmPassword}
-                onChange={(e) => setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })}
-                placeholder="Confirm new password"
-              />
-            </div>
-            <Button type="submit" disabled={changingPassword || !passwordForm.newPassword}>
-              {changingPassword ? (
-                <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Changing...
-                </>
-              ) : (
-                'Change Password'
-              )}
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
 
       {/* Notifications Card */}
       <Card>

@@ -11,12 +11,8 @@ interface AuthContextType {
   session: Session | null;
   loading: boolean;
   isConfigured: boolean;
-  signIn: (email: string, password: string) => Promise<{ error: AuthError | null }>;
-  signUp: (email: string, password: string) => Promise<{ error: AuthError | null }>;
   signInWithProvider: (provider: Provider) => Promise<{ error: AuthError | null }>;
   signOut: () => Promise<void>;
-  resetPassword: (email: string) => Promise<{ error: AuthError | null }>;
-  updatePassword: (newPassword: string) => Promise<{ error: AuthError | null }>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -47,28 +43,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => subscription.unsubscribe();
   }, []);
 
-  const signIn = async (email: string, password: string): Promise<{ error: AuthError | null }> => {
-    try {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) return { error: { message: getFriendlyAuthError(error.message) } };
-      return { error: null };
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : 'An unexpected error occurred';
-      return { error: { message: getFriendlyAuthError(msg) } };
-    }
-  };
-
-  const signUp = async (email: string, password: string): Promise<{ error: AuthError | null }> => {
-    try {
-      const { error } = await supabase.auth.signUp({ email, password });
-      if (error) return { error: { message: getFriendlyAuthError(error.message) } };
-      return { error: null };
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : 'An unexpected error occurred';
-      return { error: { message: getFriendlyAuthError(msg) } };
-    }
-  };
-
   const signOut = async () => {
     try {
       await supabase.auth.signOut();
@@ -93,32 +67,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const resetPassword = async (email: string): Promise<{ error: AuthError | null }> => {
-    try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/update-password`,
-      });
-      if (error) return { error: { message: getFriendlyAuthError(error.message) } };
-      return { error: null };
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : 'An unexpected error occurred';
-      return { error: { message: getFriendlyAuthError(msg) } };
-    }
-  };
-
-  const updatePassword = async (newPassword: string): Promise<{ error: AuthError | null }> => {
-    try {
-      const { error } = await supabase.auth.updateUser({ password: newPassword });
-      if (error) return { error: { message: getFriendlyAuthError(error.message) } };
-      return { error: null };
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : 'An unexpected error occurred';
-      return { error: { message: getFriendlyAuthError(msg) } };
-    }
-  };
-
   return (
-    <AuthContext.Provider value={{ user, session, loading, isConfigured: isSupabaseConfigured, signIn, signUp, signInWithProvider, signOut, resetPassword, updatePassword }}>
+    <AuthContext.Provider value={{ user, session, loading, isConfigured: isSupabaseConfigured, signInWithProvider, signOut }}>
       {children}
     </AuthContext.Provider>
   );

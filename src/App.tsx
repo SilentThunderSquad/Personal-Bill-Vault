@@ -8,8 +8,6 @@ import { LoadingSpinner } from './components/common/LoadingSpinner';
 const Landing = lazy(() => import('@/pages/Landing'));
 const Login = lazy(() => import('@/pages/Login'));
 const Register = lazy(() => import('@/pages/Register'));
-const ForgotPassword = lazy(() => import('@/pages/ForgotPassword'));
-const UpdatePassword = lazy(() => import('@/pages/UpdatePassword'));
 const Dashboard = lazy(() => import('@/pages/Dashboard'));
 const Bills = lazy(() => import('@/pages/Bills'));
 const AddBill = lazy(() => import('@/pages/AddBill'));
@@ -26,13 +24,11 @@ function App() {
         <Routes>
           {/* Public routes */}
           <Route path="/" element={<Landing />} />
-          <Route path="/update-password" element={<UpdatePassword />} />
 
           {/* Auth pages - redirect to dashboard if already logged in */}
           <Route element={<PublicRoute />}>
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
-            <Route path="/forgot-password" element={<ForgotPassword />} />
           </Route>
 
           {/* Protected routes */}
