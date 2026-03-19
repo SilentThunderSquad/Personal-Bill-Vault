@@ -7,6 +7,7 @@ import { StatsGrid } from '@/components/dashboard/StatsGrid';
 import { RecentBills } from '@/components/dashboard/RecentBills';
 import { QuickActions } from '@/components/dashboard/QuickActions';
 import { WarrantyTimeline } from '@/components/dashboard/WarrantyTimeline';
+import { EnhancedWarrantyAlertPanel } from '@/components/dashboard/EnhancedWarrantyAlertPanel';
 import { MonthlyUploadsChart } from '@/components/dashboard/MonthlyUploadsChart';
 import { CategoryDistributionChart } from '@/components/dashboard/CategoryDistributionChart';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
@@ -89,6 +90,11 @@ export default function Dashboard() {
             ? 'Start by adding your first bill'
             : `You have ${stats.active} active warranties`}
         </p>
+      </motion.div>
+
+      {/* Enhanced Warranty Alert Panel - Shows comprehensive warranty notifications */}
+      <motion.div variants={itemVariants}>
+        <EnhancedWarrantyAlertPanel bills={bills} />
       </motion.div>
 
       <motion.div variants={itemVariants}>

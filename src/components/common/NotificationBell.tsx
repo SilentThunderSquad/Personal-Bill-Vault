@@ -7,7 +7,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useNotifications } from '@/hooks/useNotifications';
-import { NotificationDropdown } from './NotificationDropdown';
+import { EnhancedNotificationDropdown } from './EnhancedNotificationDropdown';
 
 export function NotificationBell() {
   const [open, setOpen] = useState(false);
@@ -26,7 +26,7 @@ export function NotificationBell() {
         )}
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-80 p-0">
-        <NotificationDropdown
+        <EnhancedNotificationDropdown
           notifications={notifications}
           onMarkAsRead={markAsRead}
           onMarkAllAsRead={markAllAsRead}

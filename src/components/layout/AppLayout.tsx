@@ -7,6 +7,8 @@ import { FloatingActionButton } from '@/components/common/FloatingActionButton';
 import { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useBills } from '@/hooks/useBills';
+import { useWarrantyNotifier } from '@/hooks/useWarrantyNotifier';
 
 export function AppLayout() {
   const location = useLocation();
@@ -16,6 +18,10 @@ export function AppLayout() {
     const saved = localStorage.getItem('sidebar-collapsed');
     return saved === 'true';
   });
+
+  // Fetch bills and activate warranty notifications
+  const { bills } = useBills();
+  useWarrantyNotifier(bills);
 
   useEffect(() => {
     localStorage.setItem('sidebar-collapsed', String(sidebarCollapsed));
