@@ -1,12 +1,13 @@
 {
   "framework": "vite",
   "buildCommand": "npm run build",
-  "installCommand": "npm install",
+  "installCommand": "npm install --include=dev",
   "outputDirectory": "dist",
   "build": {
     "env": {
       "NODE_ENV": "production",
-      "NODE_VERSION": "18.x"
+      "NODE_VERSION": "18.x",
+      "NPM_CONFIG_INCLUDE": "dev"
     }
   },
   "rewrites": [
