@@ -5,6 +5,7 @@ import { PublicRoute } from '@/components/auth/PublicRoute';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { LoadingSpinner } from './components/common/LoadingSpinner';
 
+// User pages
 const Landing = lazy(() => import('@/pages/Landing'));
 const Login = lazy(() => import('@/pages/Login'));
 const Register = lazy(() => import('@/pages/Register'));
@@ -16,6 +17,21 @@ const Settings = lazy(() => import('@/pages/Settings'));
 const Profile = lazy(() => import('@/pages/Profile'));
 const Notifications = lazy(() => import('@/pages/Notifications'));
 const NotFound = lazy(() => import('@/pages/NotFound'));
+
+// Admin pages
+const AdminLogin = lazy(() => import('@/pages/admin/AdminLogin'));
+const AdminDashboard = lazy(() => import('@/pages/admin/AdminDashboard'));
+const UsersManagement = lazy(() => import('@/pages/admin/UsersManagement'));
+const BillsManagement = lazy(() => import('@/pages/admin/BillsManagement'));
+const SystemAnalytics = lazy(() => import('@/pages/admin/SystemAnalytics'));
+const ActivityLogs = lazy(() => import('@/pages/admin/ActivityLogs'));
+const StorageManagement = lazy(() => import('@/pages/admin/StorageManagement'));
+const AdminSettings = lazy(() => import('@/pages/admin/Settings'));
+
+// Admin components
+import { AdminProtectedRoute } from '@/components/admin/auth/AdminProtectedRoute';
+import { AdminLayout } from '@/components/admin/layout/AdminLayout';
+import { AdminAuthProvider } from '@/context/admin/AdminAuthContext';
 
 function App() {
   return (
@@ -31,7 +47,7 @@ function App() {
             <Route path="/register" element={<Register />} />
           </Route>
 
-          {/* Protected routes */}
+          {/* Protected user routes */}
           <Route element={<ProtectedRoute />}>
             <Route element={<AppLayout />}>
               <Route path="/dashboard" element={<Dashboard />} />
@@ -43,6 +59,30 @@ function App() {
               <Route path="/notifications" element={<Notifications />} />
             </Route>
           </Route>
+
+          {/* Admin routes with separate auth context */}
+          <Route path="/admin/*" element={
+            <AdminAuthProvider>
+              <Routes>
+                {/* Admin login - public within admin context */}
+                <Route path="login" element={<AdminLogin />} />
+
+                {/* Protected admin routes */}
+                <Route element={<AdminProtectedRoute />}>
+                  <Route element={<AdminLayout />}>
+                    <Route index element={<AdminDashboard />} />
+                    <Route path="dashboard" element={<AdminDashboard />} />
+                    <Route path="users" element={<UsersManagement />} />
+                    <Route path="bills" element={<BillsManagement />} />
+                    <Route path="analytics" element={<SystemAnalytics />} />
+                    <Route path="activity" element={<ActivityLogs />} />
+                    <Route path="storage" element={<StorageManagement />} />
+                    <Route path="settings" element={<AdminSettings />} />
+                  </Route>
+                </Route>
+              </Routes>
+            </AdminAuthProvider>
+          } />
 
           <Route path="*" element={<NotFound />} />
         </Routes>
