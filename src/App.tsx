@@ -18,6 +18,10 @@ const Profile = lazy(() => import('@/pages/Profile'));
 const Notifications = lazy(() => import('@/pages/Notifications'));
 const NotFound = lazy(() => import('@/pages/NotFound'));
 
+// Legal pages
+const PrivacyPolicy = lazy(() => import('@/pages/PrivacyPolicy'));
+const TermsOfService = lazy(() => import('@/pages/TermsOfService'));
+
 // Admin pages
 const AdminLogin = lazy(() => import('@/pages/admin/AdminLogin'));
 const AdminDashboard = lazy(() => import('@/pages/admin/AdminDashboard'));
@@ -40,6 +44,8 @@ function App() {
         <Routes>
           {/* Public routes */}
           <Route path="/" element={<Landing />} />
+          <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+          <Route path="/terms-of-service" element={<TermsOfService />} />
 
           {/* Auth pages - redirect to dashboard if already logged in */}
           <Route element={<PublicRoute />}>
