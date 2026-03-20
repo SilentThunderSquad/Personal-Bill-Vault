@@ -2,12 +2,14 @@
   "name": "bill-vault-admin",
   "framework": "vite",
   "buildCommand": "npm run build",
-  "installCommand": "npm install",
+  "installCommand": "npm install --include=dev --force",
   "outputDirectory": "dist",
   "build": {
     "env": {
       "NODE_ENV": "production",
-      "NODE_VERSION": "18.x"
+      "NODE_VERSION": "18.20.4",
+      "NPM_CONFIG_INCLUDE": "dev",
+      "NPM_CONFIG_LEGACY_PEER_DEPS": "true"
     }
   },
   "rewrites": [
