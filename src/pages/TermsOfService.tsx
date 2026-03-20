@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Scale, UserCheck, Shield, AlertTriangle, FileText, Users } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Scale, UserCheck, Shield, AlertTriangle, FileText, Users, ArrowLeft } from 'lucide-react';
 
 export default function TermsOfService() {
   useEffect(() => {
@@ -336,7 +337,35 @@ export default function TermsOfService() {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-amber-50 to-orange-50 dark:from-gray-900 dark:via-orange-900/20 dark:to-red-900/20">
+    <div className="min-h-screen bg-gradient-to-b from-accent/5 via-transparent to-background">
+      {/* Navigation Bar */}
+      <nav className="bg-card/80 backdrop-blur-md border-b border-border sticky top-0 z-50">
+        <div className="max-w-6xl mx-auto px-4 py-4">
+          <div className="flex items-center justify-between">
+            <Link to="/" className="flex items-center gap-2">
+              <Shield className="h-6 w-6 text-accent" />
+              <span className="text-lg font-bold text-foreground">Bill Vault</span>
+            </Link>
+            <div className="flex items-center gap-6">
+              <Link
+                to="/privacy-policy"
+                className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <Shield className="h-4 w-4" />
+                Privacy Policy
+              </Link>
+              <Link
+                to="/"
+                className="flex items-center gap-2 text-sm text-muted-foreground hover:text-accent transition-colors"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                Back to Home
+              </Link>
+            </div>
+          </div>
+        </div>
+      </nav>
+
       <div className="max-w-4xl mx-auto px-4 py-16">
         {/* Header */}
         <motion.div
@@ -344,40 +373,40 @@ export default function TermsOfService() {
           {...fadeInUp}
         >
           <div className="flex justify-center mb-6">
-            <div className="p-4 bg-white dark:bg-gray-800 rounded-2xl shadow-lg">
-              <Scale className="h-12 w-12 text-orange-600" />
+            <div className="p-4 bg-card border border-border rounded-2xl shadow-lg">
+              <Scale className="h-12 w-12 text-accent" />
             </div>
           </div>
-          <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
+          <h1 className="text-4xl font-bold text-foreground mb-4">
             Terms of Service
           </h1>
-          <p className="text-xl text-gray-600 dark:text-gray-300 mb-6">
+          <p className="text-xl text-muted-foreground mb-6">
             Please read these terms carefully before using Bill Vault.
           </p>
-          <p className="text-sm text-gray-500 dark:text-gray-400">
+          <p className="text-sm text-muted-foreground">
             Last Updated: March 20, 2026
           </p>
         </motion.div>
 
         {/* Table of Contents */}
         <motion.div
-          className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 mb-8"
+          className="bg-card border border-border rounded-xl shadow-lg p-6 mb-8"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.1 }}
         >
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Table of Contents</h2>
+          <h2 className="text-lg font-semibold text-foreground mb-4">Table of Contents</h2>
           <nav className="grid grid-cols-1 md:grid-cols-2 gap-2">
             {sections.map((section) => (
               <a
                 key={section.id}
                 href={`#${section.id}`}
-                className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted transition-colors"
               >
-                <div className="text-orange-600 dark:text-orange-400">
+                <div className="text-accent">
                   {section.icon}
                 </div>
-                <span className="text-gray-700 dark:text-gray-300">{section.title}</span>
+                <span className="text-muted-foreground hover:text-foreground transition-colors">{section.title}</span>
               </a>
             ))}
           </nav>
@@ -389,22 +418,22 @@ export default function TermsOfService() {
             <motion.section
               key={section.id}
               id={section.id}
-              className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8"
+              className="bg-card border border-border rounded-xl shadow-lg p-8"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.1 + index * 0.05 }}
             >
               <div className="flex items-center gap-4 mb-6">
-                <div className="p-2 bg-orange-100 dark:bg-orange-900/30 rounded-lg">
-                  <div className="text-orange-600 dark:text-orange-400">
+                <div className="p-2 bg-accent/10 border border-accent/20 rounded-lg">
+                  <div className="text-accent">
                     {section.icon}
                   </div>
                 </div>
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+                <h2 className="text-2xl font-bold text-foreground">
                   {section.title}
                 </h2>
               </div>
-              <div className="prose prose-gray dark:prose-invert max-w-none">
+              <div className="prose prose-gray dark:prose-invert max-w-none [&>*]:text-muted-foreground [&>h3]:text-foreground [&>p]:text-muted-foreground [&>ul]:text-muted-foreground [&>li]:text-muted-foreground">
                 {section.content}
               </div>
             </motion.section>
@@ -413,24 +442,24 @@ export default function TermsOfService() {
 
         {/* Contact Information */}
         <motion.div
-          className="bg-orange-50 dark:bg-orange-900/20 rounded-xl p-8 mt-12"
+          className="bg-accent/5 border border-accent/10 rounded-xl p-8 mt-12"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.8 }}
         >
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Contact Information</h2>
-          <p className="text-gray-700 dark:text-gray-300 mb-4">
+          <h2 className="text-2xl font-bold text-foreground mb-6">Contact Information</h2>
+          <p className="text-muted-foreground mb-4">
             If you have any questions about these Terms of Service, please contact us:
           </p>
           <div className="space-y-2">
-            <p className="text-gray-700 dark:text-gray-300">
-              <strong>Email:</strong> legal@billvault.com
+            <p className="text-muted-foreground">
+              <strong className="text-foreground">Email:</strong> legal@billvault.com
             </p>
-            <p className="text-gray-700 dark:text-gray-300">
-              <strong>Subject Line:</strong> "Terms of Service Inquiry - Bill Vault"
+            <p className="text-muted-foreground">
+              <strong className="text-foreground">Subject Line:</strong> "Terms of Service Inquiry - Bill Vault"
             </p>
           </div>
-          <p className="text-sm text-gray-600 dark:text-gray-400 mt-4">
+          <p className="text-sm text-muted-foreground mt-4">
             We will respond to all legal inquiries within 30 days.
           </p>
         </motion.div>
